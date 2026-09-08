@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HIcrafter tools</title>
+  <style>
+    :root{
+      --bg: #070A12;
+      --panel: rgba(10, 16, 30, 0.72);
+      --panel2: rgba(8, 12, 22, 0.78);
+      --stroke: rgba(255,255,255,0.10);
+      --stroke2: rgba(255,255,255,0.16);
+      --text: rgba(255,255,255,0.88);
+      --muted: rgba(255,255,255,0.62);
+      --muted2: rgba(255,255,255,0.48);
+      --accent: #6AE4FF;
+      --accent2: #B16CFF;
+      --good: #7CFFB2;
+      --warn: #FFD36A;
+      --bad: #FF6A8B;
+      --shadow: 0 24px 60px rgba(0,0,0,0.55);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 65% 18%, rgba(177,108,255,0.20), transparent 55%),
+                  radial-gradient(900px 650px at 18% 28%, rgba(106,228,255,0.16), transparent 58%),
+                  radial-gradient(1100px 900px at 50% 120%, rgba(60,255,190,0.08), transparent 55%),
+                  linear-gradient(180deg, #05060C, #070A12 40%, #05060C);
+      overflow-x: hidden;
+    }
+
+    /* Background canvases */
+    .bg{
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+    }
+    #stars, #web{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: saturate(1.2);
+    }
+    .vignette{
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.10), rgba(0,0,0,0.62) 65%, rgba(0,0,0,0.82));
+      z-index: 2;
+      mix-blend-mode: multiply;
+    }
+
+    header{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 42px 18px 16px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .brand{
+      display: grid;
+      gap: 8px;
+    }
+    .title{
+      font-size: clamp(26px, 3.4vw, 40px);
+      letter-spacing: 0.4px;
+      margin: 0;
+      line-height: 1.05;
+    }
+    .subtitle{
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 60ch;
+    }
+    .badgeRow{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .badge{
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      border: 1px solid var(--stroke);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.24);
+      font-size: 12px;
+      color: var(--muted);
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      user-select: none;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: radial-gradient(circle, var(--accent), rgba(106,228,255,0.0));
+      box-shadow: 0 0 18px rgba(106,228,255,0.55);
+    }
+
+    main{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 18px 44px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 18px;
+    }
+    @media (max-width: 980px){
+      main{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+      backdrop-filter: blur(10px);
+    }
+    .card::before{
+      content: "";
+      position: absolute;
+      inset: -2px -2px auto -2px;
+      height: 110px;
+      background: radial-gradient(700px 120px at 22% 20%, rgba(106,228,255,0.18), transparent 62%),
+                  radial-gradient(600px 140px at 74% 30%, rgba(177,108,255,0.18), transparent 60%);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    .cardHeader{
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: relative;
+    }
+    .cardHeader h2{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: 0.2px;
+    }
+    .cardHeader p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .cardBody{ padding: 16px 18px 18px; position: relative; }
+    .grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .field{
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    .labelRow{
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    label{
+      font-size: 12px;
+      letter-spacing: 0.22px;
+      color: var(--muted);
+    }
+    .hint{
+      font-size: 11px;
+      color: var(--muted2);
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+
+    .inputRow{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    input[type="number"], input[type="text"], select{
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(8, 12, 22, 0.65);
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+      transition: border-color 150ms ease, transform 150ms ease;
+    }
+    input[type="number"]:focus, input[type="text"]:focus, select:focus{
+      border-color: rgba(106,228,255,0.45);
+      box-shadow: 0 0 0 3px rgba(106,228,255,0.10);
+    }
+    select{ cursor: pointer; }
+
+    .actions{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+    .btnRow{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button{
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 120ms ease, border-color 120ms ease, filter 120ms ease;
+      user-select: none;
+    }
+    button:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,0.18); }
+    button:active{ transform: translateY(0px); filter: brightness(0.95); }
+
+    .primary{
+      border-color: rgba(106,228,255,0.22);
+      background: linear-gradient(180deg, rgba(106,228,255,0.18), rgba(177,108,255,0.10));
+    }
+    .danger{
+      border-color: rgba(255,106,139,0.22);
+      background: linear-gradient(180deg, rgba(255,106,139,0.14), rgba(255,255,255,0.05));
+    }
+    .smallNote{
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+      max-width: 70ch;
+    }
+
+    .results{
+      display: grid;
+      gap: 12px;
+    }
+    .resultTile{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0.10));
+      padding: 12px 12px;
+    }
+    .resultTop{
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+    .resultTop .k{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+    }
+    .resultTop .unit{
+      font-size: 11px;
+      color: var(--muted2);
+      font-family: var(--mono);
+    }
+    .resultVal{
+      font-family: var(--mono);
+      font-size: 16px;
+      letter-spacing: 0.2px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .pillRow{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .pill{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.14);
+      color: var(--muted);
+      font-size: 12px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .pill strong{
+      color: var(--text);
+      font-weight: 600;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    footer{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 18px 30px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    a{ color: var(--accent); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+
+    /* subtle floating glow orbs */
+    .orb{
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(18px);
+      opacity: 0.55;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      animation: drift 10s ease-in-out infinite;
+    }
+    .orb.one{ width: 180px; height: 180px; left: -40px; top: 210px; background: rgba(106,228,255,0.22); animation-duration: 14s; }
+    .orb.two{ width: 220px; height: 220px; right: -60px; top: 120px; background: rgba(177,108,255,0.18); animation-duration: 16s; }
+    .orb.three{ width: 260px; height: 260px; left: 55%; bottom: -110px; background: rgba(124,255,178,0.10); animation-duration: 18s; }
+    @keyframes drift{
+      0%,100% { transform: translate(0,0) scale(1); }
+      50% { transform: translate(12px,-10px) scale(1.03); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg" aria-hidden="true">
+    <canvas id="stars"></canvas>
+    <canvas id="web"></canvas>
+    <div class="vignette"></div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <h1 class="title">HIcrafter tools</h1>
+      <p class="subtitle">
+        High-precision 21 cm HI intensity mapping conversions: frequency, redshift, wavelength, and velocity.
+      </p>
+    </div>
+    <div class="badgeRow">
+      <div class="badge"><span class="dot"></span><span>21 cm Line Toolkit</span></div>
+      <div class="badge"><span class="dot" style="background: radial-gradient(circle, var(--accent2), rgba(177,108,255,0.0)); box-shadow: 0 0 18px rgba(177,108,255,0.55);"></span><span>Offline • Single HTML</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="orb one"></div>
+      <div class="orb two"></div>
+      <div class="cardHeader">
+        <h2>Inputs</h2>
+        <p>Enter any one primary observable (frequency, redshift, or wavelength) and convert to the others.</p>
+      </div>
+
+      <div class="cardBody">
+        <div class="grid">
+          <div class="field">
+            <div class="labelRow">
+              <label for="freq">Observed frequency</label>
+              <div class="hint">ν_obs</div>
+            </div>
+            <div class="inputRow">
+              <input id="freq" type="number" step="any" placeholder="e.g., 710.0" />
+              <select id="freqUnit" aria-label="Frequency unit">
+                <option value="MHz" selected>MHz</option>
+                <option value="GHz">GHz</option>
+                <option value="Hz">Hz</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="z">Redshift</label>
+              <div class="hint">z</div>
+            </div>
+            <div class="inputRow">
+              <input id="z" type="number" step="any" placeholder="e.g., 1.0" />
+              <select id="zMode" aria-label="Redshift to velocity mode">
+                <option value="rel" selected>Relativistic v(z)</option>
+                <option value="cz">Non-rel v≈cz</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="lam">Observed wavelength</label>
+              <div class="hint">λ_obs</div>
+            </div>
+            <div class="inputRow">
+              <input id="lam" type="number" step="any" placeholder="e.g., 0.42" />
+              <select id="lamUnit" aria-label="Wavelength unit">
+                <option value="m" selected>m</option>
+                <option value="cm">cm</option>
+                <option value="mm">mm</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="restFreq">Rest 21 cm line frequency</label>
+              <div class="hint">ν₀</div>
+            </div>
+            <div class="inputRow">
+              <input id="restFreq" type="number" step="any" />
+              <select id="restFreqUnit" aria-label="Rest frequency unit">
+                <option value="MHz" selected>MHz</option>
+                <option value="GHz">GHz</option>
+                <option value="Hz">Hz</option>
+              </select>
+            </div>
+            <div class="smallNote">
+              Default is the HI hyperfine transition rest frequency. Change this only if you intentionally want a different reference.
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <div class="btnRow">
+            <button class="primary" id="convertBtn">Convert</button>
+            <button id="smartBtn" title="Convert automatically from the most recently edited input">Smart Convert</button>
+            <button class="danger" id="clearBtn">Clear</button>
+          </div>
+          <div class="smallNote">
+            Tip: You can paste values and press <span style="font-family: var(--mono);">Enter</span> to convert.
+          </div>
+        </div>
+
+        <div class="pillRow" aria-label="Line constants">
+          <div class="pill">Default ν₀: <strong id="nu0Pill"></strong></div>
+          <div class="pill">Default λ₀: <strong id="lam0Pill"></strong></div>
+          <div class="pill">c: <strong id="cPill"></strong></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <div class="orb three"></div>
+      <div class="cardHeader">
+        <h2>Outputs</h2>
+        <p>Computed from your chosen input. Results update on conversion.</p>
+      </div>
+      <div class="cardBody">
+        <div class="results" id="results">
+          <div class="resultTile">
+            <div class="resultTop">
+              <div class="k">Observed frequency</div>
+              <div class="unit">MHz</div>
+            </div>
+            <div class="resultVal" id="outFreq">—</div>
+          </div>
+
+          <div class="resultTile">
+            <div class="resultTop">
+              <div class="k">Redshift</div>
+              <div class="unit">z</div>
+            </div>
+            <div class="resultVal" id="outZ">—</div>
+          </div>
+
+          <div class="resultTile">
+            <div class="resultTop">
+              <div class="k">Observed wavelength</div>
+              <div class="unit">m</div>
+            </div>
+            <div class="resultVal" id="outLam">—</div>
+          </div>
+
+          <div class="resultTile">
+            <div class="resultTop">
+              <div class="k">Radial velocity from z</div>
+              <div class="unit">km/s</div>
+            </div>
+            <div class="resultVal" id="outV">—</div>
+          </div>
+
+          <div class="resultTile">
+            <div class="resultTop">
+              <div class="k">Rest wavelength (derived)</div>
+              <div class="unit">m</div>
+            </div>
+            <div class="resultVal" id="outLam0">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px;" class="smallNote">
+          Notes:
+          <ul style="margin: 8px 0 0; padding-left: 18px;">
+            <li>Redshift from frequency uses <span style="font-family: var(--mono);">z = ν₀/ν_obs − 1</span>.</li>
+            <li>Relativistic velocity uses <span style="font-family: var(--mono);">β = ((1+z)²−1)/((1+z)²+1)</span>, <span style="font-family: var(--mono);">v = βc</span>.</li>
+            <li>Non-rel option uses <span style="font-family: var(--mono);">v ≈ cz</span> (valid only for small z).</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    Built for quick HI IM sanity checks.
+  </footer>
+
+  <script>
+    // --- Constants (SI) ---
+    // Speed of light exact (m/s)
+    const C = 299792458;
+
+    // HI 21 cm hyperfine transition rest frequency:
+    // Commonly used high-precision value in MHz:
+    // 1420.40575177 MHz
+    const DEFAULT_NU0_MHZ = 1420.40575177;
+
+    // UI elements
+    const el = (id) => document.getElementById(id);
+
+    const freqEl = el("freq");
+    const freqUnitEl = el("freqUnit");
+    const zEl = el("z");
+    const zModeEl = el("zMode");
+    const lamEl = el("lam");
+    const lamUnitEl = el("lamUnit");
+
+    const restFreqEl = el("restFreq");
+    const restFreqUnitEl = el("restFreqUnit");
+
+    const outFreqEl = el("outFreq");
+    const outZEl = el("outZ");
+    const outLamEl = el("outLam");
+    const outVEl = el("outV");
+    const outLam0El = el("outLam0");
+
+    const nu0Pill = el("nu0Pill");
+    const lam0Pill = el("lam0Pill");
+    const cPill = el("cPill");
+
+    // Track last edited primary input
+    let lastEdited = "freq"; // "freq" | "z" | "lam"
+
+    // --- Unit helpers ---
+    function toHz(value, unit){
+      if (!isFinite(value)) return NaN;
+      switch(unit){
+        case "Hz":  return value;
+        case "MHz": return value * 1e6;
+        case "GHz": return value * 1e9;
+        default: return NaN;
+      }
+    }
+    function fromHz(valueHz, unit){
+      if (!isFinite(valueHz)) return NaN;
+      switch(unit){
+        case "Hz":  return valueHz;
+        case "MHz": return valueHz / 1e6;
+        case "GHz": return valueHz / 1e9;
+        default: return NaN;
+      }
+    }
+
+    function toMeters(value, unit){
+      if (!isFinite(value)) return NaN;
+      switch(unit){
+        case "m":  return value;
+        case "cm": return value / 100;
+        case "mm": return value / 1000;
+        default: return NaN;
+      }
+    }
+    function fromMeters(valueM, unit){
+      if (!isFinite(valueM)) return NaN;
+      switch(unit){
+        case "m":  return valueM;
+        case "cm": return valueM * 100;
+        case "mm": return valueM * 1000;
+        default: return NaN;
+      }
+    }
+
+    function fmt(x, sig=12){
+      if (!isFinite(x)) return "—";
+      // Use a stable scientific-ish formatter:
+      // - For moderate magnitudes, show up to `sig` significant digits
+      // - Preserve readability
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1e6 || ax < 1e-4) return x.toExponential(Math.min(10, sig-1));
+      // toPrecision can switch to exponential; clamp with fixed for mid range
+      const s = x.toPrecision(Math.min(sig, 14));
+      // Remove trailing zeros where possible
+      return s.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,"");
+    }
+
+    function getNu0Hz(){
+      const v = parseFloat(restFreqEl.value);
+      const u = restFreqUnitEl.value;
+      if (!isFinite(v)) return NaN;
+      return toHz(v, u);
+    }
+
+    function derivedLam0Meters(nu0Hz){
+      if (!isFinite(nu0Hz) || nu0Hz <= 0) return NaN;
+      return C / nu0Hz;
+    }
+
+    // --- Physics conversions (HI IM core) ---
+    function zFromFreq(nuObsHz, nu0Hz){
+      if (!isFinite(nuObsHz) || !isFinite(nu0Hz) || nuObsHz <= 0 || nu0Hz <= 0) return NaN;
+      return (nu0Hz / nuObsHz) - 1;
+    }
+
+    function freqFromZ(z, nu0Hz){
+      if (!isFinite(z) || !isFinite(nu0Hz) || nu0Hz <= 0) return NaN;
+      return nu0Hz / (1 + z);
+    }
+
+    function lamFromZ(z, lam0M){
+      if (!isFinite(z) || !isFinite(lam0M) || lam0M <= 0) return NaN;
+      return lam0M * (1 + z);
+    }
+
+    function zFromLam(lamObsM, lam0M){
+      if (!isFinite(lamObsM) || !isFinite(lam0M) || lamObsM <= 0 || lam0M <= 0) return NaN;
+      return (lamObsM / lam0M) - 1;
+    }
+
+    // v(z): choose relativistic Doppler mapping (commonly used as a "velocity" proxy)
+    function vFromZ(z, mode){
+      if (!isFinite(z)) return NaN;
+      if (mode === "cz") return (C * z) / 1000; // km/s
+      // relativistic: beta = ((1+z)^2 - 1) / ((1+z)^2 + 1)
+      const a = (1 + z);
+      const a2 = a * a;
+      const beta = (a2 - 1) / (a2 + 1);
+      return (beta * C) / 1000; // km/s
+    }
+
+    // --- Convert orchestration ---
+    function convertFrom(which){
+      const nu0Hz = getNu0Hz();
+      const lam0M = derivedLam0Meters(nu0Hz);
+
+      // Update constant pills
+      nu0Pill.textContent = isFinite(nu0Hz) ? `${fmt(fromHz(nu0Hz, "MHz"), 12)} MHz` : "—";
+      lam0Pill.textContent = isFinite(lam0M) ? `${fmt(lam0M, 12)} m` : "—";
+      cPill.textContent = `${fmt(C/1000, 12)} km/s`;
+
+      let z, nuObsHz, lamObsM;
+
+      if (!isFinite(nu0Hz) || nu0Hz <= 0){
+        paintOutputs(NaN, NaN, NaN, NaN, lam0M);
+        return;
+      }
+
+      if (which === "freq"){
+        const v = parseFloat(freqEl.value);
+        const u = freqUnitEl.value;
+        nuObsHz = toHz(v, u);
+        z = zFromFreq(nuObsHz, nu0Hz);
+        lamObsM = lamFromZ(z, lam0M);
+      } else if (which === "z"){
+        const zv = parseFloat(zEl.value);
+        z = zv;
+        nuObsHz = freqFromZ(z, nu0Hz);
+        lamObsM = lamFromZ(z, lam0M);
+      } else if (which === "lam"){
+        const v = parseFloat(lamEl.value);
+        const u = lamUnitEl.value;
+        lamObsM = toMeters(v, u);
+        z = zFromLam(lamObsM, lam0M);
+        nuObsHz = freqFromZ(z, nu0Hz);
+      } else {
+        // fallback
+        return;
+      }
+
+      const vkm = vFromZ(z, zModeEl.value);
+      paintOutputs(nuObsHz, z, lamObsM, vkm, lam0M);
+    }
+
+    function paintOutputs(nuObsHz, z, lamObsM, vkm, lam0M){
+      outFreqEl.textContent = isFinite(nuObsHz) ? `${fmt(fromHz(nuObsHz, "MHz"), 12)} MHz` : "—";
+      outZEl.textContent    = isFinite(z) ? fmt(z, 12) : "—";
+      outLamEl.textContent  = isFinite(lamObsM) ? `${fmt(lamObsM, 12)} m` : "—";
+      outVEl.textContent    = isFinite(vkm) ? `${fmt(vkm, 12)} km/s` : "—";
+      outLam0El.textContent = isFinite(lam0M) ? `${fmt(lam0M, 12)} m` : "—";
+    }
+
+    function clearAll(){
+      freqEl.value = "";
+      zEl.value = "";
+      lamEl.value = "";
+      // keep constants
+      paintOutputs(NaN, NaN, NaN, NaN, derivedLam0Meters(getNu0Hz()));
+    }
+
+    // --- Wire events ---
+    function setLastEdited(name){ lastEdited = name; }
+
+    [freqEl, freqUnitEl].forEach(x => x.addEventListener("input", () => setLastEdited("freq")));
+    [zEl, zModeEl].forEach(x => x.addEventListener("input", () => setLastEdited("z")));
+    [lamEl, lamUnitEl].forEach(x => x.addEventListener("input", () => setLastEdited("lam")));
+
+    // Convert on Enter
+    [freqEl, zEl, lamEl, restFreqEl].forEach(inp => {
+      inp.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") convertFrom(lastEdited);
+      });
+    });
+
+    el("convertBtn").addEventListener("click", () => convertFrom(lastEdited));
+    el("smartBtn").addEventListener("click", () => {
+      // Smart convert tries the most recently edited input; if empty, tries others.
+      const tries = [lastEdited, "freq", "z", "lam"];
+      for (const t of tries){
+        if (t === "freq" && freqEl.value !== "") { convertFrom("freq"); return; }
+        if (t === "z" && zEl.value !== "") { convertFrom("z"); return; }
+        if (t === "lam" && lamEl.value !== "") { convertFrom("lam"); return; }
+      }
+      // If nothing set, still update constants and show blanks.
+      convertFrom(lastEdited);
+    });
+
+    el("clearBtn").addEventListener("click", clearAll);
+
+    // Initialize constants and outputs
+    restFreqEl.value = DEFAULT_NU0_MHZ;
+    restFreqUnitEl.value = "MHz";
+    convertFrom("freq"); // just to populate pills
+
+    // If user changes rest frequency, refresh outputs based on last edited input
+    [restFreqEl, restFreqUnitEl].forEach(x => x.addEventListener("input", () => convertFrom(lastEdited)));
+
+    // --- Cosmic background: stars + "cosmic web" filaments ---
+    const stars = document.getElementById("stars");
+    const web = document.getElementById("web");
+    const sctx = stars.getContext("2d");
+    const wctx = web.getContext("2d");
+
+    let W = 0, H = 0, DPR = 1;
+    let starPts = [];
+    let webPts = [];
+    let t0 = performance.now();
+
+    function resize(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.floor(window.innerWidth);
+      H = Math.floor(window.innerHeight);
+
+      [stars, web].forEach(c => {
+        c.width = Math.floor(W * DPR);
+        c.height = Math.floor(H * DPR);
+        c.style.width = W + "px";
+        c.style.height = H + "px";
+      });
+
+      sctx.setTransform(DPR,0,0,DPR,0,0);
+      wctx.setTransform(DPR,0,0,DPR,0,0);
+
+      // regenerate points
+      const nStars = Math.floor((W * H) / 12000);
+      starPts = Array.from({length: nStars}, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.2,
+        a: Math.random() * 0.55 + 0.15,
+        tw: Math.random() * 1.8 + 0.6
+      }));
+
+      const nWeb = Math.floor((W * H) / 26000) + 40;
+      webPts = Array.from({length: nWeb}, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.06,
+        vy: (Math.random() - 0.5) * 0.06
+      }));
+    }
+    window.addEventListener("resize", resize);
+
+    function drawStars(time){
+      sctx.clearRect(0,0,W,H);
+      // soft nebula specks
+      for (const p of starPts){
+        const tw = 0.55 + 0.45 * Math.sin((time/1000) * p.tw + (p.x + p.y) * 0.002);
+        sctx.globalAlpha = p.a * tw;
+        sctx.beginPath();
+        sctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        sctx.fillStyle = "white";
+        sctx.fill();
+      }
+      sctx.globalAlpha = 1;
+    }
+
+    function drawWeb(time){
+      wctx.clearRect(0,0,W,H);
+
+      // Update points gently
+      for (const p of webPts){
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // wrap around
+        if (p.x < -50) p.x = W + 50;
+        if (p.x > W + 50) p.x = -50;
+        if (p.y < -50) p.y = H + 50;
+        if (p.y > H + 50) p.y = -50;
+      }
+
+      // draw filaments between nearby points
+      const maxDist = Math.min(210, Math.max(140, Math.sqrt(W*H)/6));
+      const maxDist2 = maxDist * maxDist;
+
+      for (let i=0; i<webPts.length; i++){
+        const a = webPts[i];
+        for (let j=i+1; j<webPts.length; j++){
+          const b = webPts[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < maxDist2){
+            const d = Math.sqrt(d2);
+            const alpha = (1 - d / maxDist) * 0.18;
+
+            // create subtle color shift across the screen
+            const mix = (a.x / W) * 0.55 + (b.y / H) * 0.45;
+            const r = Math.floor(90 + 60 * mix);
+            const g = Math.floor(150 + 70 * (1 - mix));
+            const bl = Math.floor(220);
+
+            wctx.strokeStyle = `rgba(${r},${g},${bl},${alpha})`;
+            wctx.lineWidth = 1;
+            wctx.beginPath();
+            wctx.moveTo(a.x, a.y);
+            // slight curvature via a control point
+            const cx = (a.x + b.x) / 2 + Math.sin(time/4000 + i) * 10;
+            const cy = (a.y + b.y) / 2 + Math.cos(time/5000 + j) * 10;
+            wctx.quadraticCurveTo(cx, cy, b.x, b.y);
+            wctx.stroke();
+          }
+        }
+      }
+
+      // nodes
+      for (const p of webPts){
+        const pulse = 0.65 + 0.35 * Math.sin(time/1800 + (p.x + p.y)*0.004);
+        wctx.fillStyle = `rgba(200,240,255,${0.10 * pulse})`;
+        wctx.beginPath();
+        wctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        wctx.fill();
+      }
+    }
+
+    function loop(time){
+      drawStars(time);
+      drawWeb(time);
+      requestAnimationFrame(loop);
+    }
+
+    resize();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

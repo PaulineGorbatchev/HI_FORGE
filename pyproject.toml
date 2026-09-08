@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0,<77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hi_forge"
+version = "0.1.0"
+description = "HI Intensity Mapping generator with LHS sampling and multi-bin tomography"
+readme = "README.md"
+authors = [{name = "Pauline Gorbatchev", email = "pauline.gorbatchev@physics.uoc.gr"}]
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Astronomy"
+]
+
+dependencies = [
+    "numpy>=2.0",
+    "healpy>=1.15",
+    "camb>=1.5",
+    "glass>=2023.6",
+    "scipy>=1.8",
+    "glass-ext-camb>=2023.6",
+    "matplotlib>=3.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest",
+    "matplotlib",
+    "isort",
+]
+
+[tool.setuptools.packages.find]
+include = ["hi_forge*"]

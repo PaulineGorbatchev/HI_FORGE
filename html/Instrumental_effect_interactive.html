@@ -1,0 +1,1096 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HI Gaussian Sky Playground</title>
+<style>
+  :root {
+    --bg1: #050016;
+    --bg2: #090b33;
+    --accent: #4fd1ff;
+    --accent2: #ff6bd5;
+    --panel-bg: rgba(10, 12, 40, 0.9);
+    --text: #e6f3ff;
+    --muted: #9bb0d6;
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                 "Segoe UI", sans-serif;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 10% 20%, #1b1b4a 0, transparent 50%),
+      radial-gradient(circle at 80% 10%, #2a1b4a 0, transparent 55%),
+      radial-gradient(circle at 20% 80%, #1b3b4a 0, transparent 55%),
+      radial-gradient(circle at 80% 80%, #4a1b3b 0, transparent 55%),
+      radial-gradient(circle at 50% 50%, #050016 0, #02000a 60%, #000 100%);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.5px 1.5px at 70% 20%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.8px 1.8px at 40% 80%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.2px 1.2px at 85% 70%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.4px 1.4px at 10% 75%, rgba(255,255,255,0.5), transparent);
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  body::after {
+    animation: drift 40s linear infinite;
+    opacity: 0.18;
+  }
+
+  @keyframes drift {
+    from { transform: translate3d(0,0,0); }
+    to   { transform: translate3d(-80px, -40px, 0); }
+  }
+
+  .wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(280px, 1.2fr);
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 900px) {
+    .wrapper {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+  }
+
+  .panel {
+    background: var(--panel-bg);
+    border-radius: 18px;
+    border: 1px solid rgba(120, 180, 255, 0.25);
+    box-shadow:
+      0 0 40px rgba(0, 0, 0, 0.7),
+      0 0 60px rgba(79, 209, 255, 0.15);
+    backdrop-filter: blur(16px);
+    padding: 1.2rem 1.4rem;
+  }
+
+  .title {
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    background: radial-gradient(circle at 50% 20%, #1b1b3a 0, #050016 60%);
+  }
+
+  .controls h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.8rem;
+    color: var(--accent2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .control-group {
+    margin-bottom: 1rem;
+  }
+
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+    color: var(--muted);
+  }
+
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    background: transparent;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent2);
+    margin-top: -5px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.6);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent2);
+    box-shadow: 0 0 10px rgba(255,255,255,0.6);
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  select {
+    background: #050016;
+    color: var(--text);
+    border-radius: 999px;
+    border: 1px solid rgba(120, 180, 255, 0.6);
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  button {
+    border-radius: 999px;
+    border: 1px solid rgba(120, 180, 255, 0.6);
+    background: radial-gradient(circle at 30% 0%, #4fd1ff 0, #1b1b4a 40%, #050016 100%);
+    color: #e9f7ff;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.08s ease;
+  }
+
+  button.secondary {
+    background: radial-gradient(circle at 30% 0%, #ff6bd5 0, #2a1b4a 40%, #050016 100%);
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 18px rgba(79, 209, 255, 0.4);
+    border-color: rgba(180, 230, 255, 0.9);
+  }
+
+  .footer-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .tag-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #4fd1ff 0, #050016 70%);
+    box-shadow: 0 0 10px rgba(79, 209, 255, 0.7);
+  }
+
+  .section-title {
+    margin-top: 1.2rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  /* --- Input mode toggle + numeric inputs --- */
+  .mode-toggle { margin: 0.35rem 0 1.0rem; display: grid; gap: 0.45rem; }
+  .mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.42rem 0.62rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: #eaf5ff;
+    cursor: pointer;
+    user-select: none;
+    font: 600 0.85rem system-ui;
+    letter-spacing: 0.02em;
+  }
+  .mode-btn:hover { background: rgba(255,255,255,0.09); }
+  .mode-btn:active { transform: translateY(1px); }
+  .mode-btn-pill {
+    width: 44px; height: 22px;
+    border-radius: 999px;
+    background: rgba(79,209,255,0.25);
+    border: 1px solid rgba(79,209,255,0.45);
+    position: relative;
+  }
+  .mode-btn-pill::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    border-radius: 999px;
+    background: rgba(79,209,255,0.95);
+    transition: transform 160ms ease;
+  }
+  body[data-input-mode="numbers"] .mode-btn-pill::after { transform: translateX(22px); }
+  .mode-hint { font-size: 0.78rem; color: var(--muted); }
+
+  .input-row { display: grid; grid-template-columns: 1fr 92px; gap: 0.6rem; align-items: center; }
+  .num-input {
+    width: 100%;
+    padding: 0.35rem 0.45rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.25);
+    color: #eaf5ff;
+    font: 600 0.85rem system-ui;
+    outline: none;
+  }
+  .num-input:focus { border-color: rgba(79,209,255,0.65); box-shadow: 0 0 0 3px rgba(79,209,255,0.12); }
+
+  body[data-input-mode="numbers"] input[type="range"] { display: none; }
+  body:not([data-input-mode="numbers"]) .num-input { display: none; }
+
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="panel">
+    <div class="title">HI Gaussian Sky Playground</div>
+    <div class="subtitle">
+      Full-sky Gaussian random field (Mollweide projection) with beam smoothing, radiometer noise, and optional zebra systematics.
+    </div>
+    <canvas id="skyCanvas" width="900" height="500"></canvas>
+    <div class="footer-note">
+      <span class="tag">
+        <span class="tag-dot"></span>
+        TOY MODEL &bull; NOT A REAL CAMB/GLASS PIPELINE
+      </span>
+      <br>
+      The map is generated as a smoothed Gaussian random field on the sphere, then projected to Mollweide.
+    </div>
+  </div>
+
+  <div class="panel controls">
+    <h2>Interaction panel</h2>
+
+    
+    <div class="mode-toggle">
+      <button id="inputModeBtn" type="button" class="mode-btn" aria-pressed="false">
+        <span class="mode-btn-label">Sliders</span>
+        <span class="mode-btn-pill" aria-hidden="true"></span>
+        <span class="mode-btn-label">Numbers</span>
+      </button>
+      <div class="mode-hint" id="inputModeHint">Use sliders for fast exploration.</div>
+    </div>
+
+<div class="section-title">Beam</div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Beam size</span>
+        <span id="beamVal">3.00° FWHM</span>
+      </div>
+      <div class="input-row">
+      <input id="beamSlider" type="range" min="0.1" max="10" step="0.1" value="3">
+      <input id="beamNumber" type="number" class="num-input" min="0.1" max="10" step="0.1" value="3" inputmode="decimal">
+    </div>
+
+      <div class="checkbox-row" style="margin-top:0.4rem;">
+        <label for="beamUnit">Units:</label>
+        <select id="beamUnit">
+          <option value="deg" selected>Degrees</option>
+          <option value="rad">Radians</option>
+        </select>
+      </div>
+
+      <div class="checkbox-row">
+        <label for="beamMode">Beam type:</label>
+        <select id="beamMode">
+          <option value="sigma">σ (Gaussian sigma)</option>
+          <option value="fwhm" selected>FWHM</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Beam profile</span>
+      </div>
+      <canvas id="beamPreview" width="240" height="80"
+              style="background:#050016;border-radius:8px;border:1px solid rgba(120,180,255,0.4);"></canvas>
+    </div>
+
+    <div class="section-title">Noise (radiometer) <span style="font-size:0.78rem;color:var(--muted);letter-spacing:0.02em;text-transform:none;">&nbsp;|&nbsp;σ<sub>n</sub>: <span id="noiseSigmaVal">–</span></span></div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>T<sub>system</sub></span>
+        <span id="TsysVal">50 K</span>
+      </div>
+      <div class="input-row">
+      <input id="TsysSlider" type="range" min="10" max="200" step="1" value="50">
+      <input id="TsysNumber" type="number" class="num-input" min="10" max="200" step="1" value="50" inputmode="decimal">
+    </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>t<sub>obs</sub></span>
+        <span id="tobsVal">1000 s</span>
+      </div>
+      <div class="input-row">
+      <input id="tobsSlider" type="range" min="10" max="20000" step="10" value="1000">
+      <input id="tobsNumber" type="number" class="num-input" min="10" max="20000" step="10" value="1000" inputmode="decimal">
+    </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>N<sub>dishes</sub></span>
+        <span id="NdishVal">64</span>
+      </div>
+      <div class="input-row">
+      <input id="NdishSlider" type="range" min="1" max="256" step="1" value="64">
+      <input id="NdishNumber" type="number" class="num-input" min="1" max="256" step="1" value="64" inputmode="decimal">
+    </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Ω<sub>survey</sub> (sr)</span>
+        <span id="OsurveyVal">6.0</span>
+      </div>
+      <div class="input-row">
+      <input id="OsurveySlider" type="range" min="0.1" max="12" step="0.1" value="6.0">
+      <input id="OsurveyNumber" type="number" class="num-input" min="0.1" max="12" step="0.1" value="6.0" inputmode="decimal">
+    </div>
+    </div>
+    
+
+    <div class="section-title">Extras</div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Zebra stripes</span>
+        <span id="zebraState">Off</span>
+      </div>
+      <div class="checkbox-row">
+        <input id="zebraCheck" type="checkbox">
+        <label for="zebraCheck">Add sinusoidal “zebra” modulation</label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="regenBtn">Regenerate map</button>
+      <button id="resetBtn" class="secondary">Reset controls</button>
+    </div>
+
+    <div class="footer-note">
+      Beam is a Gaussian blur; noise uses a simple radiometer equation; zebras are a sinusoidal pattern in sky coordinates.
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('skyCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const beamSlider = document.getElementById('beamSlider');
+  const beamUnitSel = document.getElementById('beamUnit');
+  const beamModeSel = document.getElementById('beamMode');
+
+  let prevBeamUnit = beamUnitSel.value;
+  let prevBeamMode = beamModeSel.value;
+  let lastBeamUnit = beamUnitSel.value;
+  let lastBeamMode = beamModeSel.value;
+
+  function setBeamSliderRangeForUnit(unit) {
+    if (unit === "rad") {
+      beamSlider.min = "0.001745";
+      beamSlider.max = "0.174533";
+      beamSlider.step = "0.001745";
+      if (typeof beamNumber !== "undefined" && beamNumber) {
+        beamNumber.min = beamSlider.min;
+        beamNumber.max = beamSlider.max;
+        beamNumber.step = beamSlider.step;
+      }
+    } else {
+      beamSlider.min = "0.1";
+      beamSlider.max = "10.0";
+      beamSlider.step = "0.1";
+      if (typeof beamNumber !== "undefined" && beamNumber) {
+        beamNumber.min = beamSlider.min;
+        beamNumber.max = beamSlider.max;
+        beamNumber.step = beamSlider.step;
+      }
+    }
+  }
+  const beamVal = document.getElementById('beamVal');
+
+  const TsysSlider = document.getElementById('TsysSlider');
+  const tobsSlider = document.getElementById('tobsSlider');
+  const NdishSlider = document.getElementById('NdishSlider');
+  const OsurveySlider = document.getElementById('OsurveySlider');
+
+  
+
+  // ---- Input mode (sliders <-> numbers) ----
+  const inputModeBtn = document.getElementById('inputModeBtn');
+  const inputModeHint = document.getElementById('inputModeHint');
+
+  const beamNumber = document.getElementById('beamNumber');
+  const TsysNumber = document.getElementById('TsysNumber');
+  const tobsNumber = document.getElementById('tobsNumber');
+  const NdishNumber = document.getElementById('NdishNumber');
+  const OsurveyNumber = document.getElementById('OsurveyNumber');
+
+  function clampToRange(val, el) {
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    if (!Number.isFinite(val)) return parseFloat(el.value);
+    return Math.min(max, Math.max(min, val));
+  }
+
+  function snapToStep(val, el) {
+    const step = parseFloat(el.step);
+    if (!Number.isFinite(step) || step <= 0) return val;
+    const min = parseFloat(el.min) || 0;
+    const n = Math.round((val - min) / step);
+    return min + n * step;
+  }
+
+  function bindRangeNumber(rangeEl, numEl, onChange) {
+    if (!rangeEl || !numEl) return;
+
+    const syncFromRange = () => { safeSyncNumber(numEl, rangeEl.value); };
+
+    const commitFromNum = () => {
+      let v = parseFloat(numEl.value);
+      v = clampToRange(v, rangeEl);
+      v = snapToStep(v, rangeEl);
+      rangeEl.value = String(v);
+      // After committing, update the number in a normalized format
+      numEl.value = String(v);
+    };
+
+    // Slider -> number (always)
+    rangeEl.addEventListener('input', () => { syncFromRange(); onChange(); });
+
+    // Number typing: allow partial input (e.g., "-", "1.", empty) without being overwritten.
+    numEl.addEventListener('input', () => {
+      if (document.activeElement !== numEl) return;
+      const v = parseFloat(numEl.value);
+      if (!Number.isFinite(v)) return; // wait for a valid number
+      // For live updates while typing valid values:
+      rangeEl.value = String(snapToStep(clampToRange(v, rangeEl), rangeEl));
+      onChange();
+    });
+
+    // Commit on change/blur/enter
+    numEl.addEventListener('change', () => { commitFromNum(); onChange(); });
+
+    // Enter key commits immediately
+    numEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); numEl.blur(); }
+    });
+
+    // Initialize
+    syncFromRange();
+  }
+
+  function safeSyncNumber(numEl, valueStr) {
+    if (!numEl) return;
+    if (document.activeElement === numEl) return;
+    numEl.value = valueStr;
+  }
+
+  function setInputMode(mode) {
+    const isNumbers = (mode === 'numbers');
+    document.body.dataset.inputMode = isNumbers ? 'numbers' : 'sliders';
+    if (inputModeBtn) inputModeBtn.setAttribute('aria-pressed', isNumbers ? 'true' : 'false');
+    if (inputModeHint) inputModeHint.textContent = isNumbers
+      ? 'Type exact values for reproducibility.'
+      : 'Use sliders for fast exploration.';
+  }
+
+  if (inputModeBtn) {
+    inputModeBtn.addEventListener('click', () => {
+      const current = document.body.dataset.inputMode === 'numbers' ? 'numbers' : 'sliders';
+      setInputMode(current === 'numbers' ? 'sliders' : 'numbers');
+    });
+  }
+const TsysVal = document.getElementById('TsysVal');
+  const tobsVal = document.getElementById('tobsVal');
+  const NdishVal = document.getElementById('NdishVal');
+  const OsurveyVal = document.getElementById('OsurveyVal');
+  const noiseSigmaVal = document.getElementById('noiseSigmaVal');
+
+  const zebraCheck = document.getElementById('zebraCheck');
+  const zebraState = document.getElementById('zebraState');
+
+  const regenBtn = document.getElementById('regenBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Internal resolution for the field (equirectangular grid)
+  const NX = 360;   // longitude samples
+  const NY = 180;   // latitude samples
+
+  let baseField = createGaussianField(NX, NY);
+
+  function createGaussianField(nx, ny) {
+    const field = new Float32Array(nx * ny);
+    const tmp = new Float32Array(nx * ny);
+
+    for (let i = 0; i < field.length; i++) {
+      field[i] = randn();
+    }
+
+    gaussianBlur1D(field, tmp, nx, ny, 1.2, true);
+    gaussianBlur1D(tmp, field, nx, ny, 1.2, false);
+
+    let mean = 0;
+    for (let i = 0; i < field.length; i++) mean += field[i];
+    mean /= field.length;
+    let varSum = 0;
+    for (let i = 0; i < field.length; i++) {
+      const d = field[i] - mean;
+      varSum += d * d;
+    }
+    const sigma = Math.sqrt(varSum / field.length) || 1;
+    for (let i = 0; i < field.length; i++) {
+      field[i] = (field[i] - mean) / sigma;
+    }
+    return field;
+  }
+
+  function randn() {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  function gaussianBlur1D(src, dst, nx, ny, sigma, wrapX) {
+    if (sigma <= 0) {
+      dst.set(src);
+      return;
+    }
+    const radius = Math.max(1, Math.floor(sigma * 3));
+    const kernel = [];
+    let sum = 0;
+    for (let i = -radius; i <= radius; i++) {
+      const w = Math.exp(-0.5 * (i * i) / (sigma * sigma));
+      kernel.push(w);
+      sum += w;
+    }
+    for (let i = 0; i < kernel.length; i++) kernel[i] /= sum;
+
+    if (wrapX) {
+      for (let y = 0; y < ny; y++) {
+        for (let x = 0; x < nx; x++) {
+          let acc = 0;
+          for (let k = -radius; k <= radius; k++) {
+            let xx = x + k;
+            if (xx < 0) xx += nx;
+            if (xx >= nx) xx -= nx;
+            acc += src[y * nx + xx] * kernel[k + radius];
+          }
+          dst[y * nx + x] = acc;
+        }
+      }
+    } else {
+      for (let y = 0; y < ny; y++) {
+        for (let x = 0; x < nx; x++) {
+          let acc = 0;
+          let norm = 0;
+          for (let k = -radius; k <= radius; k++) {
+            const yy = y + k;
+            if (yy < 0 || yy >= ny) continue;
+            const w = kernel[k + radius];
+            acc += src[yy * nx + x] * w;
+            norm += w;
+          }
+          dst[y * nx + x] = acc / (norm || 1);
+        }
+      }
+    }
+  }
+
+  
+  function beamToSigmaDeg(value, unit, mode) {
+    let deg = unit === "rad" ? (value * 180 / Math.PI) : value;
+    if (mode === "fwhm") deg = deg / 2.35482004503;
+    return deg;
+  }
+
+  function sigmaDegToBeamValue(sigmaDeg, unit, mode) {
+    let deg = sigmaDeg;
+    if (mode === "fwhm") deg = deg * 2.35482004503;
+    return unit === "rad" ? (deg * Math.PI / 180) : deg;
+  }
+
+  function convertBeamValue(oldValue, oldUnit, oldMode, newUnit, newMode) {
+    const sigmaDeg = beamToSigmaDeg(oldValue, oldUnit, oldMode);
+    return sigmaDegToBeamValue(sigmaDeg, newUnit, newMode);
+  }
+
+function beamToPixelSigma(value, unit, mode) {
+    let deg = unit === "rad" ? (value * 180 / Math.PI) : value;
+    if (mode === "fwhm") {
+      deg = deg / 2.35482; // FWHM -> sigma
+    }
+    const degPerPixel = 360 / NX;
+    return deg / degPerPixel;
+  }
+
+  function computeNoiseSigma(Tsys, tobs, Ndish, Osurvey) {
+    const deltaNu = 1e4; // toy effective bandwidth to keep noise in a visible range
+    const Opix = (4 * Math.PI) / (NX * NY); // pixel solid angle (sr)
+    const tPix = Math.max(1e-9, tobs * Ndish * (Opix / Math.max(1e-6, Osurvey)));
+    const varNoise = (Tsys * Tsys) / (2 * tPix * deltaNu);
+    return Math.min(5, Math.sqrt(Math.max(varNoise, 0)));
+  }
+
+  function applyBeamNoiseZebra(field, nx, ny, beamSigmaPx, noiseSigma, zebras) {
+  const tmp = new Float32Array(nx * ny);
+  const out = new Float32Array(nx * ny);
+
+  // 1) Apply beam to the signal first
+  tmp.set(field);
+
+  if (beamSigmaPx > 0.01) {
+    const MAX_SIGMA_PX = 64;
+
+    // If the beam is absurdly large, the map becomes effectively uniform.
+    if (beamSigmaPx > (0.5 * nx)) {
+      let mean0 = 0;
+      for (let i = 0; i < tmp.length; i++) mean0 += tmp[i];
+      mean0 /= tmp.length;
+      for (let i = 0; i < tmp.length; i++) tmp[i] = mean0;
+    }
+
+    beamSigmaPx = Math.min(beamSigmaPx, MAX_SIGMA_PX);
+
+    gaussianBlur1D(tmp, out, nx, ny, beamSigmaPx, true);
+    gaussianBlur1D(out, tmp, nx, ny, beamSigmaPx, false);
+  }
+
+  // 2) Then add radiometer noise (and optional zebra systematics)
+  for (let j = 0; j < ny; j++) {
+    const lat = (j + 0.5) / ny * Math.PI - Math.PI / 2;
+    for (let i = 0; i < nx; i++) {
+      const idx = j * nx + i;
+      let val = tmp[idx];
+
+      if (noiseSigma > 0) val += noiseSigma * randn();
+
+      if (zebras) {
+        const lon = (i + 0.5) / nx * 2 * Math.PI - Math.PI;
+        const stripe = Math.sin(2 * Math.PI * (Math.sin(lat) * Math.cos(lon)) / 0.2);
+        val += 0.25 * stripe;
+      }
+
+      out[idx] = val;
+    }
+  }
+
+  // Re-normalize to keep color stretch stable regardless of parameters.
+  let mean = 0;
+  for (let i = 0; i < out.length; i++) mean += out[i];
+  mean /= out.length;
+
+  let varSum = 0;
+  for (let i = 0; i < out.length; i++) {
+    const d = out[i] - mean;
+    varSum += d * d;
+  }
+  const sigma = Math.sqrt(varSum / out.length) || 1;
+
+  for (let i = 0; i < out.length; i++) out[i] = (out[i] - mean) / sigma;
+  return out;
+}
+
+
+  function drawBeamPreview(beamSigmaPx, unit, mode, value) {
+    const c = document.getElementById("beamPreview");
+    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+    // Keep CSS size, increase backing resolution for crisp (non-pixelated) rendering.
+    const cssW = c.clientWidth || 240;
+    const cssH = c.clientHeight || 80;
+    const Wp = Math.round(cssW * dpr);
+    const Hp = Math.round(cssH * dpr);
+    if (c.width !== Wp || c.height !== Hp) {
+      c.width = Wp;
+      c.height = Hp;
+    }
+
+    const g = c.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+    g.imageSmoothingEnabled = true;
+
+    g.clearRect(0, 0, cssW, cssH);
+
+    // Convert the user-selected beam to σ (in degrees) for a 1D profile
+    const sigmaDeg = beamToSigmaDeg(value, unit, mode);
+if (sigmaDeg <= 0) return;
+
+    const sliderMax = parseFloat(document.getElementById("beamSlider").max);
+    const sigmaDegMax = beamToSigmaDeg(sliderMax, unit, mode);
+    const maxDeg = Math.max(1e-6, 4 * sigmaDegMax);
+    const pad = Math.max(8, Math.floor(cssH * 0.14));
+
+    // Filled Gaussian area (smooth sampling)
+    const samples = Math.max(600, Math.floor(cssW * 6)); // oversample for smoothness
+    g.save();
+    g.globalAlpha = 0.22;
+    g.fillStyle = "#4fd1ff";
+    g.beginPath();
+    for (let i = 0; i < samples; i++) {
+      const x = (i / (samples - 1)) * (cssW - 1);
+      const frac = (x / (cssW - 1)) * 2 - 1;
+      const thetaDeg = frac * maxDeg;
+      const yv = Math.exp(-0.5 * (thetaDeg * thetaDeg) / (sigmaDeg * sigmaDeg));
+      const y = (cssH - pad) - yv * (cssH - 2 * pad);
+      if (i === 0) g.moveTo(x, cssH - pad);
+      g.lineTo(x, y);
+    }
+    g.lineTo(cssW - 1, cssH - pad);
+    g.closePath();
+    g.fill();
+    g.restore();
+
+    // Gaussian curve (smooth)
+    g.strokeStyle = "#4fd1ff";
+    g.lineWidth = 2;
+    g.beginPath();
+    for (let i = 0; i < samples; i++) {
+      const x = (i / (samples - 1)) * (cssW - 1);
+      const frac = (x / (cssW - 1)) * 2 - 1;
+      const thetaDeg = frac * maxDeg;
+      const yv = Math.exp(-0.5 * (thetaDeg * thetaDeg) / (sigmaDeg * sigmaDeg));
+      const y = (cssH - pad) - yv * (cssH - 2 * pad);
+      if (i === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+    g.stroke();
+
+    // Reference lines for FWHM/2 (and σ)
+    const fwhmDeg = sigmaDeg * 2.35482004503;
+    const lines = [
+      { valDeg: sigmaDeg, alpha: 0.35 },
+      { valDeg: 0.5 * fwhmDeg, alpha: 0.25 }
+    ];
+
+    g.save();
+    g.strokeStyle = "#ff6bd5";
+    g.lineWidth = 1;
+    for (const L of lines) {
+      const frac = Math.min(1, L.valDeg / maxDeg);
+      const x1 = (0.5 - 0.5 * frac) * (cssW - 1);
+      const x2 = (0.5 + 0.5 * frac) * (cssW - 1);
+
+      // Pixel-align for crisp verticals
+      const xx1 = Math.round(x1) + 0.5;
+      const xx2 = Math.round(x2) + 0.5;
+
+      g.globalAlpha = L.alpha;
+      g.beginPath(); g.moveTo(xx1, pad); g.lineTo(xx1, cssH - pad); g.stroke();
+      g.beginPath(); g.moveTo(xx2, pad); g.lineTo(xx2, cssH - pad); g.stroke();
+    }
+    g.restore();
+
+    // Label
+    g.save();
+    g.fillStyle = "rgba(5,0,22,0.65)";
+    g.fillRect(0, 0, Math.min(cssW, 220), Math.min(cssH, 22));
+    g.fillStyle = "#e6f3ff";
+    g.font = "12px system-ui";
+    g.textAlign = "left";
+    g.textBaseline = "top";
+    const label = mode === "fwhm" ? "FWHM" : "σ";
+    const unitLabel = unit === "deg" ? "deg" : "rad";
+    const vStr = (unit === "rad") ? value.toFixed(4) : value.toFixed(2);
+    g.fillText(`${label} = ${vStr} ${unitLabel}`, 6, 4);
+    g.restore();
+  }
+
+  function colormap(x) {
+    const t = 0.5 * (1 + Math.tanh(x / 1.2));
+    let r, g, b;
+    if (t < 0.25) {
+      const u = t / 0.25;
+      r = 10 * (1 - u) + 40 * u;
+      g = 20 * (1 - u) + 120 * u;
+      b = 60 * (1 - u) + 200 * u;
+    } else if (t < 0.5) {
+      const u = (t - 0.25) / 0.25;
+      r = 40 * (1 - u) + 120 * u;
+      g = 120 * (1 - u) + 40 * u;
+      b = 200 * (1 - u) + 80 * u;
+    } else if (t < 0.75) {
+      const u = (t - 0.5) / 0.25;
+      r = 120 * (1 - u) + 220 * u;
+      g = 40 * (1 - u) + 60 * u;
+      b = 80 * (1 - u) + 40 * u;
+    } else {
+      const u = (t - 0.75) / 0.25;
+      r = 220 * (1 - u) + 255 * u;
+      g = 60 * (1 - u) + 210 * u;
+      b = 40 * (1 - u) + 120 * u;
+    }
+    return [
+      Math.max(0, Math.min(255, r)),
+      Math.max(0, Math.min(255, g)),
+      Math.max(0, Math.min(255, b))
+    ];
+  }
+
+  function drawMap() {
+    const beamValue = parseFloat(beamSlider.value);
+    const beamUnit = beamUnitSel.value;
+    const beamMode = beamModeSel.value;
+
+    const beamSigmaPx = 1.5 * beamToPixelSigma(beamValue, beamUnit, beamMode);
+
+    const unitLabel = beamUnit === "deg" ? "°" : " rad";
+    const modeLabel = beamMode === "fwhm" ? "FWHM" : "σ";
+    const beamShown = (beamUnit === "rad") ? beamValue.toFixed(4) : beamValue.toFixed(2);
+    beamVal.textContent = beamShown + unitLabel + " " + modeLabel;
+
+    const Tsys = parseFloat(TsysSlider.value);
+    const tobs = parseFloat(tobsSlider.value);
+    const Ndish = parseFloat(NdishSlider.value);
+    const Osurvey = parseFloat(OsurveySlider.value);
+
+    TsysVal.textContent = Tsys.toFixed(0) + " K";
+    tobsVal.textContent = tobs.toFixed(0) + " s";
+    NdishVal.textContent = Ndish.toFixed(0);
+    OsurveyVal.textContent = Osurvey.toFixed(1);
+
+    const noiseSigma = computeNoiseSigma(Tsys, tobs, Ndish, Osurvey);
+    if (noiseSigmaVal) noiseSigmaVal.textContent = noiseSigma.toFixed(3);
+
+    const zebras = zebraCheck.checked;
+    zebraState.textContent = zebras ? "On" : "Off";
+
+    drawBeamPreview(beamSigmaPx, beamUnit, beamMode, beamValue);
+
+    const field = applyBeamNoiseZebra(baseField, NX, NY, beamSigmaPx, noiseSigma, zebras);
+
+    const img = ctx.createImageData(W, H);
+    const data = img.data;
+
+    const xMax = 2 * Math.SQRT2;
+    const yMax = Math.SQRT2;
+
+    for (let py = 0; py < H; py++) {
+      const yNorm = (py + 0.5) / H;
+      const y = (1 - 2 * yNorm) * yMax;
+
+      for (let px = 0; px < W; px++) {
+        const xNorm = (px + 0.5) / W;
+        const x = (2 * xNorm - 1) * xMax;
+
+        const r2 = (x * x) / 8 + (y * y) / 2;
+        const idxPix = (py * W + px) * 4;
+
+        if (r2 > 1 + 1e-3) {
+          data[idxPix + 0] = 5;
+          data[idxPix + 1] = 5;
+          data[idxPix + 2] = 20;
+          data[idxPix + 3] = 255;
+          continue;
+        }
+
+        const theta = Math.asin(y / Math.SQRT2);
+        const lon = (x * Math.PI) / (2 * Math.SQRT2 * Math.cos(theta));
+        const lat = Math.asin((2 * theta + Math.sin(2 * theta)) / Math.PI);
+
+        let u = (lon + Math.PI) / (2 * Math.PI);
+        let v = (lat + Math.PI / 2) / Math.PI;
+
+        u = ((u % 1) + 1) % 1;
+        v = Math.min(1, Math.max(0, v));
+
+        const fx = u * NX - 0.5;
+        const fy = v * NY - 0.5;
+        const ix = Math.floor(fx);
+        const iy = Math.floor(fy);
+        const tx = fx - ix;
+        const ty = fy - iy;
+
+        function sample(xi, yi) {
+          let xx = xi;
+          let yy = yi;
+          if (xx < 0) xx += NX;
+          if (xx >= NX) xx -= NX;
+          if (yy < 0) yy = 0;
+          if (yy >= NY) yy = NY - 1;
+          return field[yy * NX + xx];
+        }
+
+        const v00 = sample(ix, iy);
+        const v10 = sample(ix + 1, iy);
+        const v01 = sample(ix, iy + 1);
+        const v11 = sample(ix + 1, iy + 1);
+        const v0 = v00 * (1 - tx) + v10 * tx;
+        const v1 = v01 * (1 - tx) + v11 * tx;
+        const val = v0 * (1 - ty) + v1 * ty;
+
+        const color = colormap(val);
+        data[idxPix + 0] = color[0];
+        data[idxPix + 1] = color[1];
+        data[idxPix + 2] = color[2];
+        data[idxPix + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(img, 0, 0);
+  }
+
+  beamSlider.addEventListener('input', drawMap);
+
+  // Keep the *physical* beam the same when switching units/definition (only a conversion).
+  beamUnitSel.addEventListener('change', () => {
+    const oldUnit = lastBeamUnit;
+    const newUnit = beamUnitSel.value;
+    setBeamSliderRangeForUnit(newUnit);
+    const mode = beamModeSel.value;
+
+    const vOld = parseFloat(beamSlider.value);
+    const sigmaDeg = beamToSigmaDeg(vOld, oldUnit, mode);
+
+    // Convert σ(deg) back to selected representation
+    const repDeg = (mode === "fwhm") ? (sigmaDeg * 2.35482004503) : sigmaDeg;
+    const vNew = (newUnit === "rad") ? (repDeg * Math.PI / 180) : repDeg;
+
+    const vClamped = Math.min(parseFloat(beamSlider.max), Math.max(parseFloat(beamSlider.min), vNew));
+    beamSlider.value = String(vClamped);
+    if (typeof beamNumber !== "undefined" && beamNumber) beamNumber.value = beamSlider.value;
+
+    lastBeamUnit = newUnit;
+        setBeamSliderRangeForUnit(newUnit);
+setBeamSliderRangeForUnit(beamUnitSel.value);
+  drawMap();
+  });
+
+  beamModeSel.addEventListener('change', () => {
+    const unit = beamUnitSel.value;
+    const oldMode = lastBeamMode;
+    const newMode = beamModeSel.value;
+
+    const vOld = parseFloat(beamSlider.value);
+    const sigmaDeg = beamToSigmaDeg(vOld, unit, oldMode);
+
+    const repDeg = (newMode === "fwhm") ? (sigmaDeg * 2.35482004503) : sigmaDeg;
+    const vNew = (unit === "rad") ? (repDeg * Math.PI / 180) : repDeg;
+
+    const vClamped = Math.min(parseFloat(beamSlider.max), Math.max(parseFloat(beamSlider.min), vNew));
+    beamSlider.value = String(vClamped);
+    if (typeof beamNumber !== "undefined" && beamNumber) beamNumber.value = beamSlider.value;
+
+    lastBeamMode = newMode;
+    drawMap();
+  });
+  TsysSlider.addEventListener('input', drawMap);
+  tobsSlider.addEventListener('input', drawMap);
+  NdishSlider.addEventListener('input', drawMap);
+  OsurveySlider.addEventListener('input', drawMap);
+
+  zebraCheck.addEventListener('change', drawMap);
+
+
+
+  // Numeric entry boxes (kept in sync with sliders)
+  bindRangeNumber(beamSlider, beamNumber, drawMap);
+  bindRangeNumber(TsysSlider, TsysNumber, drawMap);
+  bindRangeNumber(tobsSlider, tobsNumber, drawMap);
+  bindRangeNumber(NdishSlider, NdishNumber, drawMap);
+  bindRangeNumber(OsurveySlider, OsurveyNumber, drawMap);
+
+  // Default mode
+  setInputMode('sliders');
+
+  regenBtn.addEventListener('click', () => {
+    baseField = createGaussianField(NX, NY);
+    drawMap();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    beamSlider.value = 3;
+    beamUnitSel.value = "deg"; lastBeamUnit = "deg"; setBeamSliderRangeForUnit("deg");
+    prevBeamUnit = "deg";
+    beamModeSel.value = "fwhm"; lastBeamMode = "fwhm";
+    prevBeamMode = "fwhm";
+
+    TsysSlider.value = 50;
+    tobsSlider.value = 1000;
+    NdishSlider.value = 64;
+    OsurveySlider.value = 6.0;
+
+    zebraCheck.checked = false;
+    drawMap();
+  });
+
+  drawMap();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HIcrafter tools — Cosmology Helper</title>
+  <style>
+    :root{
+      --bg: #070A12;
+      --panel: rgba(10, 16, 30, 0.72);
+      --panel2: rgba(8, 12, 22, 0.78);
+      --stroke: rgba(255,255,255,0.10);
+      --stroke2: rgba(255,255,255,0.16);
+      --text: rgba(255,255,255,0.88);
+      --muted: rgba(255,255,255,0.62);
+      --muted2: rgba(255,255,255,0.48);
+      --accent: #6AE4FF;
+      --accent2: #B16CFF;
+      --good: #7CFFB2;
+      --warn: #FFD36A;
+      --bad: #FF6A8B;
+      --shadow: 0 24px 60px rgba(0,0,0,0.55);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 65% 18%, rgba(177,108,255,0.20), transparent 55%),
+                  radial-gradient(900px 650px at 18% 28%, rgba(106,228,255,0.16), transparent 58%),
+                  radial-gradient(1100px 900px at 50% 120%, rgba(60,255,190,0.08), transparent 55%),
+                  linear-gradient(180deg, #05060C, #070A12 40%, #05060C);
+      overflow-x: hidden;
+    }
+
+    .bg{
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+    }
+    #stars, #web{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: saturate(1.2);
+    }
+    .vignette{
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.10), rgba(0,0,0,0.62) 65%, rgba(0,0,0,0.82));
+      z-index: 2;
+      mix-blend-mode: multiply;
+    }
+
+    header{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 18px 14px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .brand{ display: grid; gap: 8px; }
+    .title{
+      font-size: clamp(24px, 3.2vw, 38px);
+      letter-spacing: 0.4px;
+      margin: 0;
+      line-height: 1.05;
+    }
+    .subtitle{
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 70ch;
+    }
+    .badgeRow{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .badge{
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      border: 1px solid var(--stroke);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.24);
+      font-size: 12px;
+      color: var(--muted);
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      user-select: none;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: radial-gradient(circle, var(--accent), rgba(106,228,255,0.0));
+      box-shadow: 0 0 18px rgba(106,228,255,0.55);
+    }
+
+    main{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 10px 18px 44px;
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 18px;
+    }
+    @media (max-width: 980px){
+      main{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+      backdrop-filter: blur(10px);
+    }
+    .card::before{
+      content: "";
+      position: absolute;
+      inset: -2px -2px auto -2px;
+      height: 110px;
+      background: radial-gradient(700px 120px at 22% 20%, rgba(106,228,255,0.18), transparent 62%),
+                  radial-gradient(600px 140px at 74% 30%, rgba(177,108,255,0.18), transparent 60%);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    .cardHeader{
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: relative;
+    }
+    .cardHeader h2{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: 0.2px;
+    }
+    .cardHeader p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 80ch;
+    }
+    .cardBody{ padding: 16px 18px 18px; position: relative; }
+
+    .field{
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .labelRow{
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    label{
+      font-size: 12px;
+      letter-spacing: 0.22px;
+      color: var(--muted);
+    }
+    .hint{
+      font-size: 11px;
+      color: var(--muted2);
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+    .row{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    input[type="number"], select{
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(8, 12, 22, 0.65);
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+      transition: border-color 150ms ease;
+    }
+    input[type="number"]:focus, select:focus{
+      border-color: rgba(106,228,255,0.45);
+      box-shadow: 0 0 0 3px rgba(106,228,255,0.10);
+    }
+
+    .actions{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+    .btnRow{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button{
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 120ms ease, border-color 120ms ease, filter 120ms ease;
+      user-select: none;
+    }
+    button:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,0.18); }
+    button:active{ transform: translateY(0px); filter: brightness(0.95); }
+    .primary{
+      border-color: rgba(106,228,255,0.22);
+      background: linear-gradient(180deg, rgba(106,228,255,0.18), rgba(177,108,255,0.10));
+    }
+    .danger{
+      border-color: rgba(255,106,139,0.22);
+      background: linear-gradient(180deg, rgba(255,106,139,0.14), rgba(255,255,255,0.05));
+    }
+
+    .smallNote{
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+      max-width: 80ch;
+    }
+
+    .plotWrap{
+      display: grid;
+      gap: 12px;
+    }
+    .plotTop{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+    .plotTitle{
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .stats{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pill{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.14);
+      color: var(--muted);
+      font-size: 12px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .pill strong{
+      color: var(--text);
+      font-weight: 600;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    canvas#plot{
+      width: 100%;
+      height: 420px;
+      display: block;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(0,0,0,0.14), rgba(0,0,0,0.08));
+    }
+    @media (max-width: 640px){
+      canvas#plot{ height: 360px; }
+    }
+
+    footer{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 18px 30px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .orb{
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(18px);
+      opacity: 0.55;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      animation: drift 10s ease-in-out infinite;
+    }
+    .orb.one{ width: 180px; height: 180px; left: -40px; top: 210px; background: rgba(106,228,255,0.22); animation-duration: 14s; }
+    .orb.two{ width: 220px; height: 220px; right: -60px; top: 120px; background: rgba(177,108,255,0.18); animation-duration: 16s; }
+    .orb.three{ width: 260px; height: 260px; left: 55%; bottom: -110px; background: rgba(124,255,178,0.10); animation-duration: 18s; }
+    @keyframes drift{
+      0%,100% { transform: translate(0,0) scale(1); }
+      50% { transform: translate(12px,-10px) scale(1.03); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg" aria-hidden="true">
+    <canvas id="stars"></canvas>
+    <canvas id="web"></canvas>
+    <div class="vignette"></div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <h1 class="title">HIcrafter tools — Cosmology Helper</h1>
+      <p class="subtitle">
+        Interactive evolution of the Universe as a function of redshift and cosmic time: distances, expansion history, and time integrals in a flat/non-flat wCDM model.
+      </p>
+    </div>
+    <div class="badgeRow">
+      <div class="badge"><span class="dot"></span><span>z → {H(z), D(z), t(z)}</span></div>
+      <div class="badge"><span class="dot" style="background: radial-gradient(circle, var(--accent2), rgba(177,108,255,0.0)); box-shadow: 0 0 18px rgba(177,108,255,0.55);"></span><span>Offline • Single HTML</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="orb one"></div>
+      <div class="orb two"></div>
+      <div class="cardHeader">
+        <h2>Cosmology model</h2>
+        <p>Set parameters, pick a quantity, and plot it as a function of redshift. Hover the plot to read values.</p>
+      </div>
+      <div class="cardBody">
+        <div class="field">
+          <div class="labelRow">
+            <label for="quantity">Quantity</label>
+            <div class="hint">y(z)</div>
+          </div>
+          <select id="quantity">
+            <option value="E">E(z) = H(z)/H0</option>
+            <option value="H">H(z) [km/s/Mpc]</option>
+            <option value="Omz">Ωm(z)</option>
+            <option value="Dc" selected>Comoving distance Dc(z) [Mpc]</option>
+            <option value="Dm">Transverse comoving Dm(z) [Mpc]</option>
+            <option value="Da">Angular diameter distance Da(z) [Mpc]</option>
+            <option value="Dl">Luminosity distance Dl(z) [Mpc]</option>
+            <option value="mu">Distance modulus μ(z) [mag]</option>
+            <option value="tL">Lookback time tL(z) [Gyr]</option>
+            <option value="age">Cosmic age t(z) [Gyr]</option>
+            <option value="dV">dV/dz/dΩ [Mpc^3/sr]</option>
+          </select>
+          <div class="smallNote">
+            Distances use the standard FRW metric with curvature via the transverse comoving distance. Time integrals ignore radiation by default (good for low–mid z; you can add Ωr if you want).
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="labelRow">
+              <label for="H0">H0</label>
+              <div class="hint">km/s/Mpc</div>
+            </div>
+            <input id="H0" type="number" step="any" value="67.4" />
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="Om0">Ωm,0</label>
+              <div class="hint">matter</div>
+            </div>
+            <input id="Om0" type="number" step="any" value="0.315" />
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="Ol0">ΩΛ,0</label>
+              <div class="hint">dark energy</div>
+            </div>
+            <input id="Ol0" type="number" step="any" value="0.685" />
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="Ok0">Ωk,0</label>
+              <div class="hint">curvature</div>
+            </div>
+            <input id="Ok0" type="number" step="any" value="0.0" />
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="w">w</label>
+              <div class="hint">DE EoS</div>
+            </div>
+            <input id="w" type="number" step="any" value="-1.0" />
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="zmax">z max</label>
+              <div class="hint">range</div>
+            </div>
+            <input id="zmax" type="number" step="any" value="6.0" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="labelRow">
+              <label for="npts">Sampling</label>
+              <div class="hint">N points</div>
+            </div>
+            <input id="npts" type="number" step="1" value="600" />
+          </div>
+
+          <div class="field">
+            <div class="labelRow">
+              <label for="yscale">Y scale</label>
+              <div class="hint">linear/log</div>
+            </div>
+            <select id="yscale">
+              <option value="linear" selected>Linear</option>
+              <option value="log">Log (positive only)</option>
+            </select>
+            <div class="smallNote">If log is selected and y ≤ 0 occurs, the plot auto-falls back to linear.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <div class="btnRow">
+            <button class="primary" id="plotBtn">Plot</button>
+            <button id="resetBtn">Reset defaults</button>
+            <button class="danger" id="copyBtn" title="Copy sampled (z,y) values as CSV to clipboard">Copy CSV</button>
+          </div>
+          <div class="smallNote">
+            Hover the curve for a readout. Drag on the plot horizontally to set a z-marker (optional).
+          </div>
+        </div>
+
+        <div class="smallNote" id="warn" style="display:none; margin-top: 10px; color: rgba(255,211,106,0.92);">
+          Warning: Ωm0 + ΩΛ0 + Ωk0 ≠ 1. This is allowed (interprets leftover as Ωx,0), but confirm your intent.
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="orb three"></div>
+      <div class="cardHeader">
+        <h2>Interactive plot</h2>
+        <p>All computations happen locally in your browser. Distances use numerical quadrature.</p>
+      </div>
+      <div class="cardBody">
+        <div class="plotWrap">
+          <div class="plotTop">
+            <p class="plotTitle" id="plotTitle">Comoving distance Dc(z) [Mpc]</p>
+            <div class="stats">
+              <div class="pill">z: <strong id="readZ">—</strong></div>
+              <div class="pill">y: <strong id="readY">—</strong></div>
+              <div class="pill">t(z): <strong id="readT">—</strong></div>
+            </div>
+          </div>
+          <canvas id="plot"></canvas>
+          <div class="smallNote" id="modelSummary"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Cosmology helper - HIcrafter.
+  </footer>
+
+  <script>
+    // =========================
+    // Constants / utilities
+    // =========================
+    const C = 299792.458; // km/s
+    const Mpc_km = 3.0856775814913673e19; // km in 1 Mpc
+    const sec_per_Gyr = 3.15576e16; // seconds in 1 Gyr (Julian year * 1e9)
+
+    const el = (id) => document.getElementById(id);
+
+    function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+    function isFinitePos(x){ return Number.isFinite(x) && x > 0; }
+
+    function fmt(x, sig=10){
+      if (!Number.isFinite(x)) return "—";
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1e7 || ax < 1e-4) return x.toExponential(Math.min(9, sig-1));
+      const s = x.toPrecision(Math.min(sig, 14));
+      return s.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,"");
+    }
+
+    // Simpson integration on [a,b] with n even
+    function simpson(f, a, b, n){
+      n = Math.max(2, Math.floor(n));
+      if (n % 2 === 1) n += 1;
+      const h = (b - a) / n;
+      let s = f(a) + f(b);
+      for (let i=1; i<n; i++){
+        const x = a + i*h;
+        s += f(x) * (i % 2 === 0 ? 2 : 4);
+      }
+      return s * h / 3;
+    }
+
+    // =========================
+    // Cosmology core (wCDM)
+    // =========================
+    function Ez(z, p){
+      const zp1 = 1 + z;
+      const Om = p.Om0 * Math.pow(zp1, 3);
+      const Ok = p.Ok0 * Math.pow(zp1, 2);
+      const Ode = p.Ol0 * Math.pow(zp1, 3*(1+p.w));
+      const Ox = p.Ox0 * Math.pow(zp1, 3); // leftover treated as matter-like (simple fallback)
+      const E2 = Om + Ok + Ode + Ox;
+      return Math.sqrt(Math.max(E2, 0));
+    }
+
+    function Hz(z, p){ return p.H0 * Ez(z, p); }
+
+    function Omz(z, p){
+      const zp1 = 1 + z;
+      const num = p.Om0 * Math.pow(zp1,3);
+      const den = Math.pow(Ez(z,p),2);
+      return den > 0 ? num/den : NaN;
+    }
+
+    // H0 in s^-1
+    function H0_s(p){
+      return (p.H0) / Mpc_km; // (km/s/Mpc)/(km/Mpc) = 1/s
+    }
+
+    // Comoving line-of-sight distance Dc(z) = (c/H0) * ∫0^z dz'/E(z')
+    function Dc(z, p){
+      if (z <= 0) return 0;
+      const integ = simpson((zz)=> 1/Math.max(Ez(zz,p), 1e-30), 0, z, p.nInt);
+      return (C/p.H0) * integ; // Mpc
+    }
+
+    // Transverse comoving distance Dm from curvature
+    function Dm(z, p){
+      const dc = Dc(z,p);
+      const Ok = p.Ok0;
+      if (!Number.isFinite(dc)) return NaN;
+      if (Math.abs(Ok) < 1e-10) return dc;
+
+      const DH = C/p.H0; // Mpc
+      const sqrtOk = Math.sqrt(Math.abs(Ok));
+      const x = sqrtOk * dc / DH;
+
+      if (Ok > 0){
+        return DH/sqrtOk * Math.sinh(x);
+      } else {
+        return DH/sqrtOk * Math.sin(x);
+      }
+    }
+
+    function Da(z, p){
+      const dm = Dm(z,p);
+      return dm / (1+z);
+    }
+    function Dl(z, p){
+      const dm = Dm(z,p);
+      return dm * (1+z);
+    }
+
+    function mu(z, p){
+      const dl = Dl(z,p); // Mpc
+      if (!isFinitePos(dl)) return NaN;
+      const dl_pc = dl * 1e6; // Mpc -> pc
+      return 5*Math.log10(dl_pc/10);
+    }
+
+    // Lookback time tL(z) = ∫0^z dz' / ((1+z') H(z'))
+    function lookbackGyr(z, p){
+      if (z <= 0) return 0;
+      const H0 = H0_s(p);
+      const integ = simpson((zz)=> 1/((1+zz) * Math.max(Ez(zz,p), 1e-30)), 0, z, p.nInt);
+      const tsec = integ / H0;
+      return tsec / sec_per_Gyr;
+    }
+
+    // Age t(z) = ∫z^∞ dz' / ((1+z') H(z'))
+    // We approximate ∞ by zUpper, with a tail correction.
+    function ageGyr(z, p){
+      const H0 = H0_s(p);
+      const zUpper = Math.max(2000, z + 2000); // large upper bound (radiation ignored, but fine for an "age" helper)
+      const integ = simpson((zz)=> 1/((1+zz) * Math.max(Ez(zz,p), 1e-30)), z, zUpper, p.nInt);
+      // crude tail: assume matter-dominated beyond zUpper so E ~ sqrt(Om0)*(1+z)^(3/2)
+      const OmEff = Math.max(p.Om0 + p.Ox0, 1e-8);
+      const tail = 2 / (3 * Math.sqrt(OmEff)) * Math.pow(1+zUpper, -3/2);
+      const tsec = (integ + tail) / H0;
+      return tsec / sec_per_Gyr;
+    }
+
+    // Differential comoving volume element per sr:
+    // dV/dz/dΩ = (c/H(z)) * Dm(z)^2
+    function dV_dz_dOm(z, p){
+      const dm = Dm(z,p);
+      const hz = Hz(z,p);
+      if (!Number.isFinite(dm) || !isFinitePos(hz)) return NaN;
+      return (C / hz) * dm * dm; // (km/s)/(km/s/Mpc)*Mpc^2 = Mpc^3
+    }
+
+    // =========================
+    // Plotting (pure canvas)
+    // =========================
+    const plot = el("plot");
+    const ctx = plot.getContext("2d");
+    let W=0, H=0, DPR=1;
+
+    function resizePlot(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const rect = plot.getBoundingClientRect();
+      W = Math.max(320, Math.floor(rect.width));
+      H = Math.max(260, Math.floor(rect.height));
+      plot.width = Math.floor(W * DPR);
+      plot.height = Math.floor(H * DPR);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      draw(); // redraw current data
+    }
+    window.addEventListener("resize", resizePlot);
+
+    let series = { z: [], y: [], yLabel: "", yUnit: "", yKey: "" };
+    let lastParams = null;
+    let hover = { active:false, z:NaN, y:NaN, x:0, ypix:0 };
+
+    function axesAndGrid(x0, y0, x1, y1){
+      ctx.save();
+      ctx.globalAlpha = 1;
+
+      // grid
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.font = "12px " + getComputedStyle(document.documentElement).getPropertyValue('--mono');
+
+      const nx = 6, ny = 5;
+      for (let i=0;i<=nx;i++){
+        const x = x0 + (x1-x0)*i/nx;
+        ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y1); ctx.stroke();
+      }
+      for (let j=0;j<=ny;j++){
+        const y = y0 + (y1-y0)*j/ny;
+        ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      // background wash
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"rgba(0,0,0,0.20)");
+      g.addColorStop(1,"rgba(0,0,0,0.06)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      const padL = 56, padR = 18, padT = 18, padB = 46;
+      const x0 = padL, y0 = padT, x1 = W - padR, y1 = H - padB;
+
+      axesAndGrid(x0,y0,x1,y1);
+
+      if (!series.z.length){
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.font = "13px " + getComputedStyle(document.documentElement).getPropertyValue('--sans');
+        ctx.fillText("Click Plot to compute the curve.", x0+10, y0+24);
+        return;
+      }
+
+      // ranges
+      const zMin = series.z[0];
+      const zMax = series.z[series.z.length-1];
+
+      let yMin = Infinity, yMax = -Infinity;
+      for (const v of series.y){
+        if (Number.isFinite(v)){
+          yMin = Math.min(yMin, v);
+          yMax = Math.max(yMax, v);
+        }
+      }
+      if (!Number.isFinite(yMin) || !Number.isFinite(yMax) || yMin === yMax){
+        yMin -= 1; yMax += 1;
+      }
+
+      const wantLog = el("yscale").value === "log";
+      let useLog = wantLog && yMin > 0;
+      if (wantLog && !useLog){
+        // fall back
+        useLog = false;
+      }
+      const yMap = (v)=>{
+        if (!Number.isFinite(v)) return NaN;
+        if (useLog){
+          const lv = Math.log10(v);
+          const lmin = Math.log10(yMin);
+          const lmax = Math.log10(yMax);
+          const t = (lv - lmin)/(lmax - lmin);
+          return y1 - t*(y1-y0);
+        } else {
+          const t = (v - yMin)/(yMax - yMin);
+          return y1 - t*(y1-y0);
+        }
+      };
+      const xMap = (z)=> x0 + (z - zMin)/(zMax - zMin)*(x1-x0);
+
+      // axis labels
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.62)";
+      ctx.font = "12px " + getComputedStyle(document.documentElement).getPropertyValue('--mono');
+
+      ctx.fillText("z", x1-10, y1+32);
+
+      const yLabel = useLog ? `log10(${series.yLabel})` : series.yLabel;
+      ctx.fillText(yLabel, x0, y0-6);
+
+      // ticks text
+      ctx.fillStyle = "rgba(255,255,255,0.52)";
+      const nx = 6, ny = 5;
+      for (let i=0;i<=nx;i++){
+        const zt = zMin + (zMax-zMin)*i/nx;
+        const x = xMap(zt);
+        ctx.fillText(fmt(zt, 6), x-10, y1+22);
+      }
+      for (let j=0;j<=ny;j++){
+        const t = j/ny;
+        let v;
+        if (useLog){
+          const lmin = Math.log10(yMin), lmax = Math.log10(yMax);
+          v = Math.pow(10, lmin + (lmax-lmin)*(1-t));
+        } else {
+          v = yMin + (yMax-yMin)*(1-t);
+        }
+        const y = y0 + (y1-y0)*t;
+        ctx.fillText(fmt(v, 6), 8, y+4);
+      }
+      ctx.restore();
+
+      // curve
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(106,228,255,0.85)";
+      ctx.beginPath();
+      let started = false;
+      for (let i=0; i<series.z.length; i++){
+        const z = series.z[i];
+        const yv = series.y[i];
+        const x = xMap(z);
+        const y = yMap(yv);
+        if (!Number.isFinite(y)) continue;
+        if (!started){
+          ctx.moveTo(x,y);
+          started = true;
+        } else {
+          ctx.lineTo(x,y);
+        }
+      }
+      ctx.stroke();
+
+      // glow
+      ctx.globalAlpha = 0.18;
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // hover readout
+      if (hover.active && Number.isFinite(hover.z) && Number.isFinite(hover.y)){
+        const x = xMap(hover.z);
+        const y = yMap(hover.y);
+
+        // vertical marker
+        ctx.save();
+        ctx.strokeStyle = "rgba(177,108,255,0.35)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y1); ctx.stroke();
+
+        // dot
+        ctx.fillStyle = "rgba(255,255,255,0.90)";
+        ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function nearestIndex(zArr, z){
+      // binary search
+      let lo=0, hi=zArr.length-1;
+      while (hi - lo > 1){
+        const mid = (lo+hi)>>1;
+        if (zArr[mid] < z) lo = mid; else hi = mid;
+      }
+      return (Math.abs(zArr[lo]-z) <= Math.abs(zArr[hi]-z)) ? lo : hi;
+    }
+
+    plot.addEventListener("mousemove", (e)=>{
+      if (!series.z.length) return;
+      const rect = plot.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const padL = 56, padR = 18;
+      const x0 = padL, x1 = rect.width - padR;
+
+      const zMin = series.z[0];
+      const zMax = series.z[series.z.length-1];
+      const z = zMin + (clamp(x, x0, x1)-x0)/(x1-x0)*(zMax-zMin);
+      const i = nearestIndex(series.z, z);
+
+      hover.active = true;
+      hover.z = series.z[i];
+      hover.y = series.y[i];
+
+      el("readZ").textContent = fmt(hover.z, 8);
+      el("readY").textContent = fmt(hover.y, 10);
+
+      // also show cosmic age at z (always)
+      if (lastParams){
+        const t = ageGyr(hover.z, lastParams);
+        el("readT").textContent = Number.isFinite(t) ? `${fmt(t, 10)} Gyr` : "—";
+      }
+
+      draw();
+    });
+
+    plot.addEventListener("mouseleave", ()=>{
+      hover.active = false;
+      el("readZ").textContent = "—";
+      el("readY").textContent = "—";
+      el("readT").textContent = "—";
+      draw();
+    });
+
+    // =========================
+    // Compute series
+    // =========================
+    function getParams(){
+      const H0 = parseFloat(el("H0").value);
+      const Om0 = parseFloat(el("Om0").value);
+      const Ol0 = parseFloat(el("Ol0").value);
+      const Ok0 = parseFloat(el("Ok0").value);
+      const w  = parseFloat(el("w").value);
+      const zmax = parseFloat(el("zmax").value);
+      const npts = Math.max(80, Math.floor(parseFloat(el("npts").value)));
+      // integration steps for Simpson; scale with npts but cap
+      const nInt = Math.min(4000, Math.max(800, Math.floor(npts*2)));
+
+      // leftover density (if any) treated as matter-like in Ez() as Ox0 (simple and explicit)
+      const sum = Om0 + Ol0 + Ok0;
+      const Ox0 = (Math.abs(1 - sum) > 1e-6) ? (1 - sum) : 0;
+
+      return { H0, Om0, Ol0, Ok0, Ox0, w, zmax, npts, nInt };
+    }
+
+    function yOfZ(z, p, key){
+      switch(key){
+        case "E": return Ez(z,p);
+        case "H": return Hz(z,p);
+        case "Omz": return Omz(z,p);
+        case "Dc": return Dc(z,p);
+        case "Dm": return Dm(z,p);
+        case "Da": return Da(z,p);
+        case "Dl": return Dl(z,p);
+        case "mu": return mu(z,p);
+        case "tL": return lookbackGyr(z,p);
+        case "age": return ageGyr(z,p);
+        case "dV": return dV_dz_dOm(z,p);
+        default: return NaN;
+      }
+    }
+
+    function labelFor(key){
+      switch(key){
+        case "E": return "E(z) = H(z)/H0";
+        case "H": return "H(z) [km/s/Mpc]";
+        case "Omz": return "Ωm(z)";
+        case "Dc": return "Dc(z) [Mpc]";
+        case "Dm": return "Dm(z) [Mpc]";
+        case "Da": return "Da(z) [Mpc]";
+        case "Dl": return "Dl(z) [Mpc]";
+        case "mu": return "μ(z) [mag]";
+        case "tL": return "tL(z) [Gyr]";
+        case "age": return "t(z) [Gyr]";
+        case "dV": return "dV/dz/dΩ [Mpc^3/sr]";
+        default: return "y(z)";
+      }
+    }
+
+    function compute(){
+      const p = getParams();
+      lastParams = p;
+
+      // parameter sanity note
+      const sum = p.Om0 + p.Ol0 + p.Ok0;
+      el("warn").style.display = (Math.abs(1 - sum) > 5e-3) ? "block" : "none";
+
+      const zmax = Math.max(0.001, p.zmax);
+      const n = p.npts;
+
+      const key = el("quantity").value;
+      const z = new Array(n);
+      const y = new Array(n);
+
+      // sample z linearly
+      for (let i=0; i<n; i++){
+        z[i] = zmax * (i/(n-1));
+      }
+
+      // compute with caching of distance integrals? (simple approach: direct)
+      for (let i=0; i<n; i++){
+        y[i] = yOfZ(z[i], p, key);
+      }
+
+      series = { z, y, yLabel: labelFor(key), yKey: key };
+      el("plotTitle").textContent = series.yLabel;
+
+      const age0 = ageGyr(0, p);
+      const dc1 = Dc(Math.min(1, zmax), p);
+      el("modelSummary").innerHTML =
+        `Model: H0=${fmt(p.H0,6)} km/s/Mpc, Ωm0=${fmt(p.Om0,6)}, ΩΛ0=${fmt(p.Ol0,6)}, Ωk0=${fmt(p.Ok0,6)}, w=${fmt(p.w,6)}.
+         Age today t0≈${Number.isFinite(age0)?fmt(age0,8):"—"} Gyr.
+         Dc(z=1)≈${Number.isFinite(dc1)?fmt(dc1,8):"—"} Mpc.`;
+
+      // reset hover readout
+      el("readZ").textContent = "—";
+      el("readY").textContent = "—";
+      el("readT").textContent = "—";
+      hover.active = false;
+
+      // if log selected but invalid, force linear silently (and keep UI selection)
+      draw();
+    }
+
+    // =========================
+    // Clipboard CSV
+    // =========================
+    async function copyCSV(){
+      if (!series.z.length) return;
+      let csv = "z,y\n";
+      for (let i=0;i<series.z.length;i++){
+        const z = series.z[i];
+        const y = series.y[i];
+        csv += `${z},${y}\n`;
+      }
+      try{
+        await navigator.clipboard.writeText(csv);
+      }catch(err){
+        // fallback: prompt
+        window.prompt("Copy CSV:", csv);
+      }
+    }
+
+    // =========================
+    // Wire controls
+    // =========================
+    el("plotBtn").addEventListener("click", compute);
+    el("copyBtn").addEventListener("click", copyCSV);
+
+    el("resetBtn").addEventListener("click", ()=>{
+      el("H0").value = 67.4;
+      el("Om0").value = 0.315;
+      el("Ol0").value = 0.685;
+      el("Ok0").value = 0.0;
+      el("w").value = -1.0;
+      el("zmax").value = 6.0;
+      el("npts").value = 600;
+      el("yscale").value = "linear";
+      el("quantity").value = "Dc";
+      compute();
+    });
+
+    // Auto-plot on Enter in any input
+    ["H0","Om0","Ol0","Ok0","w","zmax","npts"].forEach(id=>{
+      el(id).addEventListener("keydown", (e)=>{ if (e.key==="Enter") compute(); });
+    });
+    el("quantity").addEventListener("change", compute);
+    el("yscale").addEventListener("change", compute);
+
+    // =========================
+    // Cosmic background: stars + web
+    // =========================
+    const stars = document.getElementById("stars");
+    const web = document.getElementById("web");
+    const sctx = stars.getContext("2d");
+    const wctx = web.getContext("2d");
+
+    let BW=0, BH=0, BDPR=1;
+    let starPts = [];
+    let webPts = [];
+
+    function resizeBG(){
+      BDPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      BW = Math.floor(window.innerWidth);
+      BH = Math.floor(window.innerHeight);
+
+      [stars, web].forEach(c => {
+        c.width = Math.floor(BW * BDPR);
+        c.height = Math.floor(BH * BDPR);
+        c.style.width = BW + "px";
+        c.style.height = BH + "px";
+      });
+
+      sctx.setTransform(BDPR,0,0,BDPR,0,0);
+      wctx.setTransform(BDPR,0,0,BDPR,0,0);
+
+      const nStars = Math.floor((BW * BH) / 12000);
+      starPts = Array.from({length: nStars}, () => ({
+        x: Math.random() * BW,
+        y: Math.random() * BH,
+        r: Math.random() * 1.2 + 0.2,
+        a: Math.random() * 0.55 + 0.15,
+        tw: Math.random() * 1.8 + 0.6
+      }));
+
+      const nWeb = Math.floor((BW * BH) / 26000) + 40;
+      webPts = Array.from({length: nWeb}, () => ({
+        x: Math.random() * BW,
+        y: Math.random() * BH,
+        vx: (Math.random() - 0.5) * 0.06,
+        vy: (Math.random() - 0.5) * 0.06
+      }));
+
+      resizePlot();
+    }
+    window.addEventListener("resize", resizeBG);
+
+    function drawStars(time){
+      sctx.clearRect(0,0,BW,BH);
+      for (const p of starPts){
+        const tw = 0.55 + 0.45 * Math.sin((time/1000) * p.tw + (p.x + p.y) * 0.002);
+        sctx.globalAlpha = p.a * tw;
+        sctx.beginPath();
+        sctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        sctx.fillStyle = "white";
+        sctx.fill();
+      }
+      sctx.globalAlpha = 1;
+    }
+
+    function drawWeb(time){
+      wctx.clearRect(0,0,BW,BH);
+
+      for (const p of webPts){
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -50) p.x = BW + 50;
+        if (p.x > BW + 50) p.x = -50;
+        if (p.y < -50) p.y = BH + 50;
+        if (p.y > BH + 50) p.y = -50;
+      }
+
+      const maxDist = Math.min(210, Math.max(140, Math.sqrt(BW*BH)/6));
+      const maxDist2 = maxDist * maxDist;
+
+      for (let i=0; i<webPts.length; i++){
+        const a = webPts[i];
+        for (let j=i+1; j<webPts.length; j++){
+          const b = webPts[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < maxDist2){
+            const d = Math.sqrt(d2);
+            const alpha = (1 - d / maxDist) * 0.18;
+
+            const mix = (a.x / BW) * 0.55 + (b.y / BH) * 0.45;
+            const r = Math.floor(90 + 60 * mix);
+            const g = Math.floor(150 + 70 * (1 - mix));
+            const bl = 220;
+
+            wctx.strokeStyle = `rgba(${r},${g},${bl},${alpha})`;
+            wctx.lineWidth = 1;
+            wctx.beginPath();
+            wctx.moveTo(a.x, a.y);
+            const cx = (a.x + b.x) / 2 + Math.sin(time/4000 + i) * 10;
+            const cy = (a.y + b.y) / 2 + Math.cos(time/5000 + j) * 10;
+            wctx.quadraticCurveTo(cx, cy, b.x, b.y);
+            wctx.stroke();
+          }
+        }
+      }
+
+      for (const p of webPts){
+        const pulse = 0.65 + 0.35 * Math.sin(time/1800 + (p.x + p.y)*0.004);
+        wctx.fillStyle = `rgba(200,240,255,${0.10 * pulse})`;
+        wctx.beginPath();
+        wctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        wctx.fill();
+      }
+    }
+
+    function loop(time){
+      drawStars(time);
+      drawWeb(time);
+      requestAnimationFrame(loop);
+    }
+
+    // init
+    resizeBG();
+    compute();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

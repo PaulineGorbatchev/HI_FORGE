@@ -1,0 +1,17 @@
+name: hi_forge
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy>=2.0
+  - scipy>=1.8
+  - healpy>=1.15
+  - camb>=1.5
+  - matplotlib>=3.5
+  - pytest
+  - flake8
+  - pip:
+      - glass>=2023.6
+      - glass-ext-camb>=2023.6
+      - -e .
