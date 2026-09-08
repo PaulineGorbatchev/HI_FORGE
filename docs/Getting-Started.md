@@ -1,6 +1,6 @@
 # Getting Started
 
-This page walks you through generating your first HI intensity map with HIcrafter.
+This page walks you through generating your first HI intensity map with HI_FORGE.
 
 ## 1. Import HIGenerator
 

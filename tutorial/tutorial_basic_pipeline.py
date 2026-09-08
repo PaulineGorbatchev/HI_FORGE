@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from hi_forge.generator import HIGenerator
 
-LOG = logging.getLogger("hi_crafter_tutorial")
+LOG = logging.getLogger("hi_forge_tutorial")
 
 
 def plot_map(m, title, outpath, vmin=None, vmax=None, cmap="viridis", percentiles=(0.1, 99.9), xsize=2048):

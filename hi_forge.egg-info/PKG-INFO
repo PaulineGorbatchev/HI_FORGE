@@ -1,3 +1,49 @@
+Metadata-Version: 2.2
+Name: hi_forge
+Version: 0.1.0
+Summary: HI Intensity Mapping generator with LHS sampling and multi-bin tomography
+Author-email: Pauline Gorbatchev <pauline.gorbatchev@physics.uoc.gr>
+License: MIT License
+        
+        Copyright (c) 2026 Pauline Gorbatchev
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Astronomy
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=2.0
+Requires-Dist: healpy>=1.15
+Requires-Dist: camb>=1.5
+Requires-Dist: glass>=2023.6
+Requires-Dist: scipy>=1.8
+Requires-Dist: glass-ext-camb>=2023.6
+Requires-Dist: matplotlib>=3.5
+Provides-Extra: dev
+Requires-Dist: black; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: matplotlib; extra == "dev"
+Requires-Dist: isort; extra == "dev"
+
 <table>
   <tr>
     <td>
@@ -10,7 +56,7 @@
       </p>
     </td>
     <td align="right">
-      <img src="assets/logo.png" alt="HI_FORGE Logo" width="500">
+      <img src="assets/logo.png" alt="HiCrafter Logo" width="500">
     </td>
   </tr>
 

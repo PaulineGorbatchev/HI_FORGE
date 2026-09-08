@@ -1,12 +1,12 @@
-# HIcrafter Wiki
+# HI_FORGE Wiki
 
-**HIcrafter** generates realistic full-sky neutral hydrogen (HI) intensity maps across redshift ranges, combining lognormal matter-field realizations with effective HI brightness-temperature models and optional instrumental/observational effects.
+**HI_FORGE** generates realistic full-sky neutral hydrogen (HI) intensity maps across redshift ranges, combining lognormal matter-field realizations with effective HI brightness-temperature models and optional instrumental/observational effects.
 
 ## Pages
 
 | Page | Description |
 |------|-------------|
-| [Installation](Installation.md) | How to install HIcrafter and its dependencies |
+| [Installation](Installation.md) | How to install HI_FORGE and its dependencies |
 | [Getting Started](Getting-Started.md) | Quick-start guide and your first map |
 | [Configuration](Configuration.md) | Full reference for all `HIGenerator` parameters |
 | [Tutorials](Tutorials.md) | Step-by-step tutorials and worked examples |
@@ -28,7 +28,7 @@ hi_map = gen.generate_map()
 
 ## Physics background
 
-HIcrafter implements the following signal chain:
+HI_FORGE implements the following signal chain:
 
 ```
 T_obs(n̂) = (T_HI * B)(n̂) + n(n̂) + S(n̂)

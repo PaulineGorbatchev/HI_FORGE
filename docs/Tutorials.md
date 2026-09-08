@@ -1,6 +1,6 @@
 # Tutorials
 
-HIcrafter ships with two tutorial scripts in the `tutorial/` directory.
+HI_FORGE ships with two tutorial scripts in the `tutorial/` directory.
 
 ## Tutorial 1 — Basic pipeline
 
@@ -72,7 +72,7 @@ Three browser-based tools are included in the `html/` directory:
 | File | Description |
 |------|-------------|
 | `html/Instrumental_effect_interactive.html` | Interactive playground for visualising Gaussian sky simulations and instrumental effects. |
-| `html/converter.html` | Unit converter and parameter helper for HIcrafter inputs. |
+| `html/converter.html` | Unit converter and parameter helper for HI_FORGE inputs. |
 | `html/cosmology.html` | Cosmology calculator (H(z), comoving distance, angular diameter distance, etc.). |
 
 Open any of these files directly in a browser — no server required.

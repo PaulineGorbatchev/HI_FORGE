@@ -2,7 +2,7 @@
 
 ## Requirements
 
-HIcrafter requires Python ≥ 3.9 and the following packages:
+HI_FORGE requires Python ≥ 3.9 and the following packages:
 
 | Package | Minimum version |
 |---------|----------------|
@@ -35,8 +35,8 @@ pip install hi_forge
 To access tutorials and examples, clone the repository and install in editable mode:
 
 ```bash
-git clone https://github.com/PaulineGorbatchev/HIcrafter.git
-cd HIcrafter
+git clone https://github.com/PaulineGorbatchev/HI_FORGE.git
+cd HI_FORGE
 pip install -e ".[dev]"
 ```
 
