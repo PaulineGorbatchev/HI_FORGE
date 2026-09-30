@@ -1,3 +1,6 @@
 hicrafter.egg-info/
 __pycache__/
 installation_check/smoke_outputs/
+dist/
+*.egg-info/
+.DS_Store

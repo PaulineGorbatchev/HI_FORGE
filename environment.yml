@@ -12,6 +12,6 @@ dependencies:
   - pytest
   - flake8
   - pip:
-      - glass>=2023.6
+      - glass>=2025.2
       - glass-ext-camb>=2023.6
       - -e .

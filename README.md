@@ -177,21 +177,17 @@ cd HI_FORGE
 pip install -e .</code></pre>
 
 <p>
-Since the repository is private, Git will ask for your GitHub username and a
-<a href="https://github.com/settings/tokens/new">personal access token</a>
-(with the <code>repo</code> scope) as the password.
-</p>
-
-<p>
 Dependencies are listed in <code>requirements.txt</code>:
 </p>
 
 <pre><code>
-numpy>=1.21.0
+numpy>=2.0
 healpy>=1.15.0
-camb>=0.5.0
-glass>=0.5.0
+camb>=1.5
+glass>=2025.2
+glass-ext-camb>=2023.6
 scipy>=1.8.0
+matplotlib>=3.5.0
 </code></pre>
 
 <h2 id="usage">Usage</h2>
