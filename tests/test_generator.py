@@ -81,3 +81,22 @@ def test_generate_batch(tmp_path):
     for p in paths:
         m = np.load(p)
         assert m.shape == (hp.nside2npix(16),)
+
+
+def test_tbar_amplitude(gen):
+    # Mean HI temperature at z ~ 0.4 is of order 0.1 mK
+    t = gen.Tbar(0.425)
+    assert 0.05 < t < 0.2
+
+
+def test_masked_pixels_zero(tmp_path):
+    nside = 16
+    observed = np.ones(hp.nside2npix(nside))
+    observed[: len(observed) // 4] = 0.0
+    mask_path = str(tmp_path / "mask.npy")
+    np.save(mask_path, observed)
+    g = HIGenerator(nside=nside, z_min=0.4, z_max=0.45, beam_deg=2.0,
+                    noise=True, zebras=True, mask_file=mask_path, seed=1)
+    m = g.generate_map()
+    assert np.all(m[observed == 0] == 0.0)
+    assert np.all(m[observed == 1] != 0.0)

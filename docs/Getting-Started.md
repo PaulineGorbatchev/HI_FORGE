@@ -64,7 +64,7 @@ Use `generate_batch()` to produce multiple maps with incrementing seed offsets a
 
 ```python
 gen = HIGenerator(nside=32, z_min=0.40, z_max=0.45, beam_deg=1.5, noise=True, seed=1)
-maps = gen.generate_batch(n_maps=10, output_dir="my_maps")
+paths = gen.generate_batch(n_maps=10, output_dir="my_maps")
 # Saves my_maps/map_000.npy … my_maps/map_009.npy
 ```
 

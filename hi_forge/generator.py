@@ -39,7 +39,7 @@ class HIGenerator:
     def __init__(self, h=0.7, As=2e-9, Oc=0.25, Ob=0.05, ns=0.965,
                  nside=32, z_min=0.4, z_max=0.45, nbins=1, sigmaz0=0.0001,
                  beam_deg=None, noise=True, noise_level=1.0, mask_file=None,
-                 zebras=False, seed=1):
+                 zebras=False, zebra_amplitude=0.1, zebra_wavelength=0.1, seed=1):
 
         self.h, self.As, self.Oc, self.Ob, self.ns = h, As, Oc, Ob, ns
         self.nside = min(nside, 512)  # SAFETY: cap nside
@@ -47,6 +47,7 @@ class HIGenerator:
         self.sigmaz0, self.beam_deg = sigmaz0, beam_deg
         self.noise, self.noise_level = noise, noise_level
         self.mask_file, self.zebras = mask_file, zebras
+        self.zebra_amplitude, self.zebra_wavelength = zebra_amplitude, zebra_wavelength
         self.seed = seed
 
         self.pars, self.cosmo, self.results = self._setup_cosmology()
@@ -60,7 +61,13 @@ class HIGenerator:
         return pars, _CAMBCosmologyWrapper(pars, results), results
 
     def Tbar(self, z):
-        return 189 * 4e-4 * (1+z)**2.6 * self.cosmo.h / self.results.hubble_parameter(z)
+        """Mean HI brightness temperature in mK.
+
+        T(z) = 189 h (1+z)^2 Omega_HI(z) / E(z), with Omega_HI(z) = 4e-4 (1+z)^0.6
+        and E(z) = H(z)/H0. CAMB returns H(z) in km/s/Mpc, so it is divided by H0.
+        """
+        E = self.results.hubble_parameter(z) / self.pars.H0
+        return 189 * 4e-4 * (1+z)**2.6 * self.cosmo.h / E
 
     def b_HI(self, z):
         return 0.6 + 0.3*(1+z)
@@ -82,7 +89,11 @@ class HIGenerator:
         assert self.tomo_THI.shape[1] == self.nbins, (self.tomo_THI.shape, self.nbins)
 
     def generate_map(self, seed_offset=0):
-        """Generate a single HI intensity map summed over all tomographic bins."""
+        """Generate a single HI intensity map, summed over all redshift bins.
+
+        Effects are applied in the order beam, zebras, noise, mask, so that
+        masked pixels are exactly zero in the returned map.
+        """
         rng = np.random.default_rng(self.seed + seed_offset)
         matter = glass.fields.generate_lognormal(self.gls, self.nside, ncorr=1, rng=rng)
 
@@ -94,12 +105,12 @@ class HIGenerator:
 
         if self.beam_deg:
             HImap = self._beam(HImap)
-        if self.mask_file:
-            HImap = self._mask(HImap)
         if self.zebras:
             HImap = self._zebra(HImap)
         if self.noise:
             HImap += self._noise(len(HImap), rng)
+        if self.mask_file:
+            HImap = self._mask(HImap)
 
         return HImap
 
@@ -140,7 +151,7 @@ class HIGenerator:
         # Preferred simple method
         try:
             # hp.smoothing returns a new map smoothed with Gaussian beam (fwhm in radians)
-            sm = hp.smoothing(m, fwhm=fwhm_rad, verbose=False)
+            sm = hp.smoothing(m, fwhm=fwhm_rad)
             return sm
         except Exception as e:
             LOG.warning("hp.smoothing failed (%s). Falling back to alm method.", e)
@@ -164,5 +175,5 @@ class HIGenerator:
     def _zebra(self, m):
         pix = np.arange(len(m))
         theta, phi = hp.pix2ang(self.nside, pix)
-        stripe = np.sin(2*np.pi * (np.sin(theta)*np.cos(phi)) / 0.1)
-        return m + 0.1 * stripe
+        stripe = np.sin(2*np.pi * (np.sin(theta)*np.cos(phi)) / self.zebra_wavelength)
+        return m + self.zebra_amplitude * stripe

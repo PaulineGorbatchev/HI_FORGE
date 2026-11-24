@@ -34,8 +34,8 @@ gen = HIGenerator(
 | `nside` | int | `32` | HEALPix `nside` parameter. Number of pixels = 12 × nside². Capped at 512 for safety. Common values: 32, 64, 128, 256, 512. |
 | `z_min` | float | `0.4` | Minimum redshift of the simulated volume. |
 | `z_max` | float | `0.45` | Maximum redshift of the simulated volume. |
-| `nbins` | int | `1` | Number of tomographic redshift bins between `z_min` and `z_max`. |
-| `sigmaz0` | float | `1e-4` | Photometric redshift uncertainty σ_z,0 (Gaussian error width). |
+| `nbins` | int | `1` | Number of redshift bins between `z_min` and `z_max`. The returned map is the sum over all bins. |
+| `sigmaz0` | float | `1e-4` | Width σ_z,0 of the Gaussian smoothing of the redshift bin edges. |
 
 ## Instrumental effect parameters
 
@@ -43,9 +43,11 @@ gen = HIGenerator(
 |-----------|------|---------|-------------|
 | `beam_deg` | float or `None` | `None` | Gaussian beam FWHM in **degrees**. Set to `None` to skip beam smoothing. |
 | `noise` | bool | `True` | Whether to add thermal (white Gaussian) noise. |
-| `noise_level` | float | `1.0` | Standard deviation of the noise (in the same units as T_HI). Only used when `noise=True`. |
-| `mask_file` | str or `None` | `None` | Path to a sky mask file. Accepted formats: `.npy` array or HEALPix FITS map. Masked pixels are multiplied by zero. |
+| `noise_level` | float | `1.0` | Standard deviation of the noise in mK (same units as T_HI). Only used when `noise=True`. |
+| `mask_file` | str or `None` | `None` | Path to a sky mask file. Accepted formats: `.npy` array or HEALPix FITS map. Values are 1 for observed and 0 for masked pixels. The mask is applied last, so masked pixels are exactly zero. |
 | `zebras` | bool | `False` | Add scan-synchronous zebra-striping systematics S(θ, φ) = A · sin(2π/λ · sin θ cos φ). |
+| `zebra_amplitude` | float | `0.1` | Stripe amplitude A, in mK. |
+| `zebra_wavelength` | float | `0.1` | Stripe wavelength λ. |
 
 ## Reproducibility parameter
 
@@ -74,7 +76,7 @@ Returns a list of `numpy.ndarray` maps loaded from disk.
 ### Mean HI brightness temperature
 
 ```
-T̄_HI(z) = 189 × 4×10⁻⁴ × (1 + z)^2.6 × h / H(z)   [mK]
+T̄_HI(z) = 189 × 4×10⁻⁴ × (1 + z)^2.6 × h / E(z)   [mK],   E(z) = H(z)/H₀
 ```
 
 ### HI bias

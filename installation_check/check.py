@@ -33,16 +33,16 @@ def compare_maps(a, b, label):
 
 def make_synthetic_mask(nside, out_path):
     """
-    Your _mask() uses: return m * (~mask).astype(float)
-    So mask=True means "masked out". We'll make a simple Galactic cut.
+    _mask() multiplies the map by the mask, so mask=1 means observed and
+    mask=0 means masked out. We make a simple Galactic cut.
     """
     npix = hp.nside2npix(nside)
     pix = np.arange(npix)
     theta, phi = hp.pix2ang(nside, pix)
     lat = 0.5 * np.pi - theta  # radians
-    mask = np.abs(lat) < np.deg2rad(20.0)  # mask a band around the equator
+    observed = np.abs(lat) >= np.deg2rad(20.0)  # mask a band around the equator
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    np.save(out_path, mask.astype(bool))
+    np.save(out_path, observed.astype(float))
     return out_path
 
 
@@ -187,8 +187,8 @@ def main():
     assert_map_ok(m_mask, gen_mask.nside, "mask")
     np.save(os.path.join(out_root, "map_mask.npy"), m_mask)
 
-    mask = np.load(mask_path).astype(bool)
-    frac_zeroed = np.mean(m_mask[mask] == 0.0)
+    masked_out = np.load(mask_path) == 0
+    frac_zeroed = np.mean(m_mask[masked_out] == 0.0)
     print(f"  masked pixels zeroed fraction = {frac_zeroed:.3f} (expect close to 1.0)")
 
     # ---- 7) all effects together ----
@@ -215,10 +215,10 @@ def main():
     print("\nTest: generate_batch(n_maps=3)")
     batch = gen_all.generate_batch(n_maps=3, output_dir=batch_dir)
 
-    # Validate returned maps
-    assert len(batch) == 3, "batch: expected 3 maps returned"
-    for i, bm in enumerate(batch):
-        assert_map_ok(bm, gen_all.nside, f"batch_{i}")
+    # Validate returned paths
+    assert len(batch) == 3, "batch: expected 3 paths returned"
+    for i, bp in enumerate(batch):
+        assert_map_ok(np.load(bp), gen_all.nside, f"batch_{i}")
 
     # ---- 9) Plot and save the batch maps (now they exist) ----
     print("\nPlotting the 3 batch maps...")

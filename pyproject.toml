@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hi_forge"
 version = "0.1.0"
-description = "HI Intensity Mapping generator with LHS sampling and multi-bin tomography"
+description = "HI intensity map generator with Latin Hypercube sampling for simulation-based inference"
 readme = "README.md"
 authors = [{name = "Pauline Gorbatchev", email = "pauline.gorbatchev@physics.uoc.gr"}]
 license = {file = "LICENSE"}

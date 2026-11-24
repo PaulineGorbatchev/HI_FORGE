@@ -4,9 +4,9 @@
       <h1>HI_FORGE</h1>
       <p>
         HI_FORGE generates realistic HI intensity maps across redshift ranges.
-        Features: Gaussian beam/noise/masks/zebras, single maps or Latin Hypercube
-        parameter suites for ML/SBI training, multi-bin tomography support.
-        Seeds logged 1→N. Perfect for cosmological simulations.
+        Features: Gaussian beam, thermal noise, sky masks and zebra-striping
+        systematics, single maps or Latin Hypercube parameter suites for ML/SBI
+        training, with reproducible seeds.
       </p>
     </td>
     <td align="right">
@@ -77,8 +77,12 @@ where <code>δ_i(n̂)</code> are lognormal realizations of the matter field on s
 The mean HI brightness temperature is parametrized as
 </p>
 
-<pre><code>T̄_HI(z) = 189 × 4 × 10^-4 · (1 + z)^2.6 · h / H(z)
+<pre><code>T̄_HI(z) = 189 × 4 × 10^-4 · (1 + z)^2.6 · h / E(z)   [mK]
 </code></pre>
+
+<p>
+with <code>E(z) = H(z) / H_0</code>.
+</p>
 
 <p>
 and the HI bias is modeled as
@@ -137,18 +141,18 @@ Scan-synchronous striping systematics are modeled as a deterministic modulation 
 </code></pre>
 
 <p>
-where <code>(θ, φ)</code> are spherical coordinates, <code>λ</code> sets the stripe wavelength, and <code>A</code> is the stripe amplitude.
+where <code>(θ, φ)</code> are spherical coordinates, <code>λ</code> sets the stripe wavelength (<code>zebra_wavelength</code>), and <code>A</code> is the stripe amplitude (<code>zebra_amplitude</code>).
 </p>
 
 <p>
 The final observed map is therefore
 </p>
 
-<pre><code>T_obs(n̂) = (T_HI * B)(n̂) + n(n̂) + S(n̂)
+<pre><code>T_obs(n̂) = M(n̂) · [ (T_HI * B)(n̂) + n(n̂) + S(n̂) ]
 </code></pre>
 
 <p>
-with optional masking applied multiplicatively in pixel space.
+where the optional mask <code>M</code> (1 for observed pixels, 0 for masked pixels) is applied last, so that masked pixels are exactly zero.
 </p>
 
 <h2 id="features">Features</h2>
@@ -160,8 +164,8 @@ with optional masking applied multiplicatively in pixel space.
   <li><strong>Zebra-striping systematics</strong> — inject scan-synchronous striping artefacts.</li>
   <li><strong>Sky masking</strong> — apply an external mask (HEALPix FITS or <code>.npy</code> file).</li>
   <li><strong>Latin Hypercube suites</strong> — generate large batches of maps spanning a cosmological parameter space for ML / SBI training.</li>
-  <li><strong>Reproducible seeds</strong> — every map is generated from a deterministic seed; seeds are logged 1 → N across a batch.</li>
-  <li><strong>Multi-CPU batching</strong> — produce N maps efficiently with <code>generate_batch()</code>.</li>
+  <li><strong>Reproducible seeds</strong> — map <em>i</em> of a batch is generated with seed <code>seed + i</code>.</li>
+  <li><strong>Batch generation</strong> — produce N maps saved to disk with <code>generate_batch()</code> (serial).</li>
   <li><strong>Flexible cosmology</strong> — five configurable ΛCDM parameters (h, A<sub>s</sub>, Ω<sub>c</sub>, Ω<sub>b</sub>, n<sub>s</sub>) via <a href="https://camb.info">CAMB</a>.</li>
 </ul>
 
@@ -209,7 +213,7 @@ To generate a batch of <em>N</em> maps (each with an independent seed offset), u
 </p>
 
 <pre><code class="language-python">
-maps = gen.generate_batch(n_maps=100, output_dir="output/maps")
+paths = gen.generate_batch(n_maps=100, output_dir="output/maps")  # list of saved .npy paths
 </code></pre>
 
 <p>See the <a href="tutorial/tutorial_basic_pipeline.py">basic pipeline tutorial</a> and
@@ -239,13 +243,15 @@ All parameters are passed to the <code>HIGenerator</code> constructor.
     <tr><td><code>nside</code></td><td>int</td><td>32</td><td>HEALPix resolution parameter (capped at 512 for safety). Pixel count = 12 × nside².</td></tr>
     <tr><td><code>z_min</code></td><td>float</td><td>0.4</td><td>Minimum redshift of the survey volume.</td></tr>
     <tr><td><code>z_max</code></td><td>float</td><td>0.45</td><td>Maximum redshift of the survey volume.</td></tr>
-    <tr><td><code>nbins</code></td><td>int</td><td>1</td><td>Number of tomographic redshift bins.</td></tr>
-    <tr><td><code>sigmaz0</code></td><td>float</td><td>1×10<sup>−4</sup></td><td>Photometric redshift uncertainty σ<sub>z,0</sub>.</td></tr>
+    <tr><td><code>nbins</code></td><td>int</td><td>1</td><td>Number of redshift bins between <code>z_min</code> and <code>z_max</code>. The returned map is the sum over all bins.</td></tr>
+    <tr><td><code>sigmaz0</code></td><td>float</td><td>1×10<sup>−4</sup></td><td>Width σ<sub>z,0</sub> of the Gaussian smoothing of the redshift bin edges.</td></tr>
     <tr><td><code>beam_deg</code></td><td>float or None</td><td>None</td><td>Gaussian beam FWHM in degrees. Set to <code>None</code> to skip smoothing.</td></tr>
     <tr><td><code>noise</code></td><td>bool</td><td>True</td><td>Whether to add thermal noise.</td></tr>
-    <tr><td><code>noise_level</code></td><td>float</td><td>1.0</td><td>Standard deviation of the Gaussian noise (same units as T<sub>HI</sub>).</td></tr>
-    <tr><td><code>mask_file</code></td><td>str or None</td><td>None</td><td>Path to a sky mask (<code>.npy</code> or HEALPix FITS). Masked pixels are set to zero.</td></tr>
+    <tr><td><code>noise_level</code></td><td>float</td><td>1.0</td><td>Standard deviation of the Gaussian noise, in mK (same units as T<sub>HI</sub>).</td></tr>
+    <tr><td><code>mask_file</code></td><td>str or None</td><td>None</td><td>Path to a sky mask (<code>.npy</code> or HEALPix FITS), 1 for observed and 0 for masked pixels. Masked pixels are set to zero.</td></tr>
     <tr><td><code>zebras</code></td><td>bool</td><td>False</td><td>Add scan-synchronous zebra-striping systematics.</td></tr>
+    <tr><td><code>zebra_amplitude</code></td><td>float</td><td>0.1</td><td>Stripe amplitude A, in mK.</td></tr>
+    <tr><td><code>zebra_wavelength</code></td><td>float</td><td>0.1</td><td>Stripe wavelength λ.</td></tr>
     <tr><td><code>seed</code></td><td>int</td><td>1</td><td>Base random seed for reproducibility.</td></tr>
   </tbody>
 </table>
